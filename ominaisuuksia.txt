@@ -1,0 +1,13 @@
+
+
+Miten olisi:
+  -P‰‰ohjelma PPE:ll‰
+  -Voi antaa komentoriviparametrin‰ kuvan resoluution
+  -Jaetaan s‰ikeisiin SPE-ytimille
+  -Varsinainen laskenta sitten SPE:ll‰, assemblyll‰ jos ei ihan hirvee
+  homma ole
+
+
+Voisi tehd‰ ikkunan, joka n‰ytt‰‰ valmiin kuvan. Joko suoraan X-ikkuna
+tai sitten Gtk:lla. Gtk:lla olisi helppo tehd‰, vaikka onkin hieman
+overkill jos tarvitsee vain n‰ytt‰‰ pelkk‰ kuva (vrt. Qt vs Win-API)
