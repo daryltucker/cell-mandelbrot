@@ -9,10 +9,29 @@
 #include <libspe2.h>
 
 
-extern spe_program_handle_t convert_to_upper_handle;
+#define MAX_SPU_THREADS 6
+#define MAX_DATA_PER_THREAD 16384
 
-spe_context_ptr_t speid;
-unsigned int entry = SPE_DEFAULT_ENTRY;
+
+// extern spe_program_handle_t fractal_handle;
+
+
+typedef struct {
+    spe_context_ptr_t context __attribute__((aligned(16)));
+    // ...
+} thread_arguments;
+
+
+void *run_spu_thread(void *arg)
+{
+    thread_arguments args;
+    unsigned int entry = SPE_DEFAULT_ENTRY;
+    args = *((thread_arguments *) arg);
+
+    // K‰ynnistet‰‰n s‰ie...
+
+    pthread_exit(NULL);
+}
 
 
 int main(int argc, char *argv[])
@@ -24,16 +43,8 @@ int main(int argc, char *argv[])
 	exit(1);
     }
 
-    if ((speid = spe_context_create(0,NULL)) == NULL) {
-	fprintf(stderr, "Kontekstin luonti ep‰onnistui\n");
-	exit(1);
-    }
-
-    // Ladataan SPE-ohjelma kontekstiin...
-
-    // Suoritetaan SPE-ohjelma kontekstissa...
-
-    // Tuhotaan konteksti...
+    // Ladataan spu-konteksteja ja
+    // k‰ynnistell‰‰n s‰ikeit‰...
 
     // Piirret‰‰n lopputulos (tiedostoon ja/tai ikkunaan)
 
