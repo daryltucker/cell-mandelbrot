@@ -1,5 +1,6 @@
 
-SPU_CC_FLAGS=-Wall
+SPU_CC_FLAGS=-m64 -Wall
+LFLAGS=-lspe2
 BIN=cell-mandelbrot
 
 
@@ -9,7 +10,7 @@ $(BIN):
 	ppu-gcc -o $(BIN) main.o
 
 main.o: main.c
-	ppu-gcc $(SPU_CC_FLAGS) -c main.c
+	ppu-gcc $(SPU_CC_FLAGS) -c main.c $(LFLAGS)
 
 clean:
 	rm -rf *.o $(BIN)
