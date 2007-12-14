@@ -1,7 +1,7 @@
 /*
  * Mandelbrot-fraktaalin PPE-p‰‰ohjelma.
  *
- * Tero J‰ntti, Matti Lehtinen 2007.
+ * Tero J‰ntti, Matti Lehtinen, Ville-Matti Pasanen 2007.
  */
 
 #include <stdio.h>
@@ -29,11 +29,13 @@ void *run_spu_thread(void *arg)
     unsigned int entry = SPE_DEFAULT_ENTRY;
     args = *((thread_arguments *) arg);
 
-    if ( spe_context_run(args.context, &entry, 0,
-			 &foo_bar, NULL, NULL) < 0 ) {
-	perror("SPE kontekstin k‰ynnistys ei onnistunut");
-	exit(1);
-    }
+/*     if ( spe_context_run(args.context, &entry, 0, */
+/* 			 &foo_bar, NULL, NULL) < 0 ) { */
+/* 	perror("SPE kontekstin k‰ynnistys ei onnistunut"); */
+/* 	exit(1); */
+/*     } */
+
+    puts("Hei, olen s‰ie ja kuolen ihan kohta!");
 
     pthread_exit(NULL);
 }
@@ -65,21 +67,33 @@ int main(int argc, char *argv[])
 	// Asetetaan s‰ikeelle osoitin kuvaan
 	// sek‰ omaan osuuteen kuvasta...
 
-	if ((arg->context = spe_context_create(0, NULL)) == NULL) {
-	    perror("Kontekstin luonti ei onnistunut");
-	    exit(1);
-	}
+/* 	if ((arg->context = spe_context_create(0, NULL)) == NULL) { */
+/* 	    perror("Kontekstin luonti ei onnistunut"); */
+/* 	    exit(1); */
+/* 	} */
 
 	// T‰ss‰ ladataan spu-kontekstia...
 
 	// ja luodaan s‰ie...
+	pthread_create(&threads[i],
+		       NULL,
+		       &run_spu_thread,
+		       arg);
     }
 
     // SPE:t laskee kovasti...
+    puts("P‰‰ohjelma odottelee s‰ikeit‰...");
 
     // Joinataan...
+    for (i=0; i<spu_threads; i++)
+    {
+	if (pthread_join(threads[i], NULL)) {
+	    perror("pthread_join ep‰onnistui");
+	    exit(1);
+	}
+    }
 
-    // Tuhotaan s‰ikeet...
+    // Tuhotaan s‰ikeisiin liitetyt kontekstit...
 
     // Piirret‰‰n lopputulos (tiedostoon ja/tai ikkunaan)
 
