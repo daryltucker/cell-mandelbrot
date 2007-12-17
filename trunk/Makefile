@@ -1,6 +1,6 @@
 
 SPU_CC_FLAGS=-m64 -Wall
-LFLAGS=-lspe2
+LFLAGS=-lpthread -lspe2
 BIN=cell-mandelbrot
 
 
