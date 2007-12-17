@@ -7,7 +7,7 @@
 ihanan_kallista:
 	.ascii "SPU: Elama on!\n\0"
 
-### Pino spu_main:n stack frame:
+### Pino main:n stack frame:
 #
 # ( register argument save area )
 # ( general register save area )
@@ -21,9 +21,9 @@ ihanan_kallista:
 
 
 .global main
-.type spu_main, @function
+.type main, @function
 
-spu_main:
+main:
 	## Prologi
 	stqd $lr, LR_OFFSET($sp)
 	stqd $sp, -MAIN_FRAME_SIZE($sp)
