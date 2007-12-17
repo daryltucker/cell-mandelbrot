@@ -14,7 +14,7 @@
 #define MAX_DATA_PER_THREAD 16384
 
 
-extern spe_program_handle_t mandelbrot_handle;
+extern spe_program_handle_t fractal_handle;
 
 
 typedef struct {
@@ -36,7 +36,7 @@ void *run_spu_thread(void *arg)
     unsigned int entry = SPE_DEFAULT_ENTRY;
     args = *((thread_arguments *) arg);
 
-    if ( spe_context_run(args.context, &entry, 0, &foo_bar, NULL, NULL) < 0 )
+    if ( spe_context_run(args.context, &entry, 0, NULL, NULL, NULL) < 0 )
 	fail("SPE kontekstin käynnistys ei onnistunut");
 
     puts("Hei, olen säie ja kuolen ihan kohta!");
@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
 	    fail("Kontekstin luonti ei onnistunut");
 
 	// Tässä ladataan spu-kontekstia...
-	if ( spe_program_load(arg->context, &mandelbrot_handle) != 0 )
+	if ( spe_program_load(arg->context, &fractal_handle) != 0 )
 	    fail("SPU-ohjelman lataus ei onnistunut");
 
 	pthread_create(&threads[i],
