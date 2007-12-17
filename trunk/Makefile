@@ -1,16 +1,24 @@
 
-SPU_CC_FLAGS=-m64 -Wall
+PPU_CC_FLAGS=-m64 -Wall
 LFLAGS=-lpthread -lspe2
-BIN=cell-mandelbrot
+BIN=mandelbrot
 
 
 all: $(BIN)
 
-$(BIN): main.o
-	ppu-gcc -o $(BIN) main.o
+
+$(BIN): main.o spe_fractal_csf.o
+	ppu-gcc $(PPU_CC_FLAGS) -o $(BIN) spe_fractal_csf.o main.o $(LFLAGS)
 
 main.o: main.c
-	ppu-gcc $(SPU_CC_FLAGS) -c main.c $(LFLAGS)
+	ppu-gcc $(PPU_CC_FLAGS) -c main.c
+
+spe_fractal_csf.o: spe_fractal
+	embedspu -m64 fractal_handle spe_fractal spe_fractal_csf.o
+
+spe_fractal: spu_fractal_driver.s
+	spu-gcc spu_fractal_driver.s -o spe_fractal
+
 
 clean:
 	rm -rf *.o $(BIN)
