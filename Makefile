@@ -6,7 +6,7 @@ BIN=cell-mandelbrot
 
 all: $(BIN)
 
-$(BIN):
+$(BIN): main.o
 	ppu-gcc -o $(BIN) main.o
 
 main.o: main.c
