@@ -4,6 +4,7 @@
  * Tero Jäntti, Matti Lehtinen, Ville-Matti Pasanen 2007.
  */
 
+#include "image.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,7 +22,6 @@
 
 extern spe_program_handle_t fractal_handle;
 
-typedef long COLOR;
 
 typedef struct {
     spe_context_ptr_t context __attribute__((aligned(16)));
@@ -109,7 +109,7 @@ int main(int argc, char *argv[])
 
     if (spu_threads > MAX_SPU_THREADS) spu_threads = MAX_SPU_THREADS;
 
-    image = (COLOR *) memalign(16, img_width*img_height);
+    image = (COLOR *) memalign(16, img_width*img_height*sizeof(COLOR));
 
     for (i=0; i<spu_threads; i++)
     {
@@ -144,6 +144,7 @@ int main(int argc, char *argv[])
     }
 
     // Piirretään lopputulos (tiedostoon ja/tai ikkunaan)
+    save_image(image, img_width, img_height, filename);
 
     free(image);
     return 0;
