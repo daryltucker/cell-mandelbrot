@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <malloc.h>
 #include <unistd.h>
 #include <pthread.h>
 #include <libspe2.h>
@@ -17,8 +18,10 @@
 
 #define MAX_FILE_NAME_LENGTH 200
 
+
 extern spe_program_handle_t fractal_handle;
 
+typedef long COLOR;
 
 typedef struct {
     spe_context_ptr_t context __attribute__((aligned(16)));
@@ -64,6 +67,7 @@ int main(int argc, char *argv[])
     int i, spu_threads;
     thread_arguments thread_args[MAX_SPU_THREADS];
     pthread_t threads[MAX_SPU_THREADS];
+    COLOR *image;
 
     memset(filename, '\0', MAX_FILE_NAME_LENGTH + 1);
 
@@ -105,7 +109,7 @@ int main(int argc, char *argv[])
 
     if (spu_threads > MAX_SPU_THREADS) spu_threads = MAX_SPU_THREADS;
 
-    // Varataan muistia kuvaa varten...
+    image = (COLOR *) memalign(16, img_width*img_height);
 
     for (i=0; i<spu_threads; i++)
     {
@@ -141,5 +145,6 @@ int main(int argc, char *argv[])
 
     // Piirretään lopputulos (tiedostoon ja/tai ikkunaan)
 
+    free(image);
     return 0;
 }
