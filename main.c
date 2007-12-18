@@ -105,8 +105,6 @@ int main(int argc, char *argv[])
 
     if (spu_threads > MAX_SPU_THREADS) spu_threads = MAX_SPU_THREADS;
 
-    spu_threads = 4;
-
     // Varataan muistia kuvaa varten...
 
     for (i=0; i<spu_threads; i++)
