@@ -1,6 +1,6 @@
 
 PPU_CC_FLAGS=-m64 -Wall
-LFLAGS=-lpthread -lspe2
+LFLAGS=-lpthread -lspe2 -lX11
 BIN=mandelbrot
 
 
