@@ -104,8 +104,18 @@ int draw_fractal(COLOR *image, int width, int height)
 void usage(const char *program)
 {
     printf("The super-fast fractal drawing program\n"
-	   "Usage:\n"
-	   "%s -o FILE [-w WIDTH] [-h HEIGHT]\n", program);
+	   "Usage, command line:\n"
+	   "%s -o FILE [-w WIDTH] [-h HEIGHT]\n"
+	   "\n"
+	   "Usage, window:\n"
+	   "%s -X\n"
+	   "\n"
+	   "Options:\n"
+	   "-o\tOutput file\n"
+	   "-w\tImage width\n"
+	   "-h\tImage height\n"
+	   "-X\tShow window\n",
+	   program, program);
 }
 
 
@@ -162,10 +172,10 @@ int main(int argc, char *argv[])
 	}
     }
 
-/*     if (strlen(filename) == 0) { */
-/* 	usage(argv[0]); */
-/* 	exit(2); */
-/*     } */
+    if (!should_draw_window && strlen(filename) == 0) {
+	usage(argv[0]);
+	exit(0);
+    }
 
     image = (COLOR *) memalign(16, img_width*img_height*sizeof(COLOR));
 
