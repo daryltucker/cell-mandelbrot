@@ -51,6 +51,55 @@ void *run_spu_thread(void *arg)
 }
 
 
+int draw_fractal(COLOR *image, int width, int height)
+{
+    int i, spu_threads;
+    thread_arguments thread_args[MAX_SPU_THREADS];
+    pthread_t threads[MAX_SPU_THREADS];
+
+    if ((spu_threads = spe_cpu_info_get(SPE_COUNT_USABLE_SPES, -1)) < 1){
+	fprintf(stderr, "Ei ole vapaata SPE-ydint‰\n");
+	exit(1);
+    }
+
+    if (spu_threads > MAX_SPU_THREADS) spu_threads = MAX_SPU_THREADS;
+
+    for (i=0; i<spu_threads; i++)
+    {
+	thread_arguments *arg = &thread_args[i];
+
+	// Asetetaan s‰ikeelle osoitin kuvaan
+	// sek‰ omaan osuuteen kuvasta...
+
+	if ((arg->context = spe_context_create(0, NULL)) == NULL)
+	    fail("Kontekstin luonti ei onnistunut");
+
+	// T‰ss‰ ladataan spu-kontekstia...
+	if ( spe_program_load(arg->context, &fractal_handle) != 0 )
+	    fail("SPU-ohjelman lataus ei onnistunut");
+
+	pthread_create(&threads[i],
+		       NULL,
+		       &run_spu_thread,
+		       arg);
+    }
+
+    // SPE:t laskee kovasti...
+    puts("P‰‰ohjelma odottelee s‰ikeit‰...");
+
+    for (i=0; i<spu_threads; i++)
+    {
+	if (pthread_join(threads[i], NULL))
+	    fail("pthread_join() ep‰onnistui");
+
+	if (spe_context_destroy(thread_args[i].context))
+	    fail("Kontekstin tuhoaminen ep‰onnistui");
+    }
+
+    return 0;
+}
+
+
 void usage(const char *program)
 {
     printf("The super-fast fractal drawing program\n"
@@ -64,9 +113,6 @@ int main(int argc, char *argv[])
     int optchar;
     int img_width = 300, img_height = 300;
     char filename[MAX_FILE_NAME_LENGTH + 1];
-    int i, spu_threads;
-    thread_arguments thread_args[MAX_SPU_THREADS];
-    pthread_t threads[MAX_SPU_THREADS];
     COLOR *image;
 
     memset(filename, '\0', MAX_FILE_NAME_LENGTH + 1);
@@ -102,48 +148,10 @@ int main(int argc, char *argv[])
 	exit(2);
     }
 
-    if ((spu_threads = spe_cpu_info_get(SPE_COUNT_USABLE_SPES, -1)) < 1){
-	fprintf(stderr, "Ei ole vapaata SPE-ydint‰\n");
-	exit(1);
-    }
-
-    if (spu_threads > MAX_SPU_THREADS) spu_threads = MAX_SPU_THREADS;
-
     image = (COLOR *) memalign(16, img_width*img_height*sizeof(COLOR));
 
-    for (i=0; i<spu_threads; i++)
-    {
-	thread_arguments *arg = &thread_args[i];
+    draw_fractal(image, img_width, img_height);
 
-	// Asetetaan s‰ikeelle osoitin kuvaan
-	// sek‰ omaan osuuteen kuvasta...
-
-	if ((arg->context = spe_context_create(0, NULL)) == NULL)
-	    fail("Kontekstin luonti ei onnistunut");
-
-	// T‰ss‰ ladataan spu-kontekstia...
-	if ( spe_program_load(arg->context, &fractal_handle) != 0 )
-	    fail("SPU-ohjelman lataus ei onnistunut");
-
-	pthread_create(&threads[i],
-		       NULL,
-		       &run_spu_thread,
-		       arg);
-    }
-
-    // SPE:t laskee kovasti...
-    puts("P‰‰ohjelma odottelee s‰ikeit‰...");
-
-    for (i=0; i<spu_threads; i++)
-    {
-	if (pthread_join(threads[i], NULL))
-	    fail("pthread_join() ep‰onnistui");
-
-	if (spe_context_destroy(thread_args[i].context))
-	    fail("Kontekstin tuhoaminen ep‰onnistui");
-    }
-
-    // Piirret‰‰n lopputulos (tiedostoon ja/tai ikkunaan)
     save_image(image, img_width, img_height, filename);
 
     free(image);
