@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <libspe2.h>
+#include <X11/Xlib.h>
 
 
 #define MAX_SPU_THREADS 6
@@ -108,16 +109,31 @@ void usage(const char *program)
 }
 
 
+Window create_window(Display *d, int *screen)
+{
+    Window w;
+
+    *screen = DefaultScreen(d);
+    w = XCreateSimpleWindow( d, RootWindow(d, *screen),
+			     10, 10, 300, 300, 1,
+			     BlackPixel(d, *screen), WhitePixel(d, *screen) );
+    XSelectInput(d, w, ExposureMask | KeyPressMask);
+    XMapWindow(d, w);
+    return w;
+}
+
+
 int main(int argc, char *argv[])
 {
     int optchar;
     int img_width = 300, img_height = 300;
+    int should_draw_window = 0;
     char filename[MAX_FILE_NAME_LENGTH + 1];
     COLOR *image;
 
     memset(filename, '\0', MAX_FILE_NAME_LENGTH + 1);
 
-    while ((optchar = getopt(argc, argv, "w:h:o:")) != -1)
+    while ((optchar = getopt(argc, argv, "w:h:o:X")) != -1)
     {
 	switch (optchar)
 	{
@@ -138,21 +154,63 @@ int main(int argc, char *argv[])
 	case 'o':
 	    strncpy(filename, optarg, MAX_FILE_NAME_LENGTH);
 	    break;
+	case 'X':
+	    should_draw_window = 1;
+	    break;
 	default:
 	    break;
 	}
     }
 
-    if (strlen(filename) == 0) {
-	usage(argv[0]);
-	exit(2);
-    }
+/*     if (strlen(filename) == 0) { */
+/* 	usage(argv[0]); */
+/* 	exit(2); */
+/*     } */
 
     image = (COLOR *) memalign(16, img_width*img_height*sizeof(COLOR));
 
-    draw_fractal(image, img_width, img_height);
+    if (should_draw_window) {
+	Display *display;
+	int screen;
+	Window window;
+	GC gc;
+	XEvent e;
 
-    save_image(image, img_width, img_height, filename);
+	if ((display = XOpenDisplay(NULL)) == NULL)
+	    // Jotain fiksumpaa tähän...
+	    fail("XOpenDisplay() ei onnistunut");
+
+	window = create_window(display, &screen);
+	gc = DefaultGC(display, screen);
+
+	for (;;)
+	{
+	    XNextEvent(display, &e);
+
+	    switch (e.type)
+	    {
+	    case Expose:
+		XDrawString(display, window, gc,
+			    50, 50,
+			    "Hello, World!", strlen("Hello, World!"));
+		break;
+	    case KeyPress:
+		goto finished;
+	    default:
+		break;
+	    }
+	}
+
+    finished:
+	XCloseDisplay(display);
+
+    } else /* No window */ {
+
+	draw_fractal(image, img_width, img_height);
+
+	if (strlen(filename) > 0)
+	    save_image(image, img_width, img_height, filename);
+    }
 
     free(image);
     return 0;
