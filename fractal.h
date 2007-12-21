@@ -1,4 +1,4 @@
-#include <stdlib.h>
+typedef unsigned int uint;
 
 typedef struct {
     char *image __attribute__((aligned(16)));
@@ -14,3 +14,11 @@ typedef struct {
     uint area_heigth __attribute__((aligned(16)));
     uint bytes_per_pixel __attribute__((aligned(16)));
 } fractal_parameters;
+
+
+/* void draw24bitMandelbrot(char *image, uint width, uint height, */
+/*                          double reOffset, double imOffset, */
+/*                          double zoom, uint maxIteration, */
+/*                          uint areaX, uint areaY, */
+/*                          uint areaWidth, uint areaHeight, */
+/*                          uint bytesPerPixel) */

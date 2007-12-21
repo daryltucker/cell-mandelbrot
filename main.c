@@ -21,6 +21,8 @@
 
 #define MAX_FILE_NAME_LENGTH 200
 
+#define BYTES_PER_PIXEL 3
+
 
 extern spe_program_handle_t fractal_handle;
 
@@ -44,7 +46,7 @@ void *run_spu_thread(void *arg)
     unsigned int entry = SPE_DEFAULT_ENTRY;
     args = *((thread_arguments *) arg);
 
-    if ( spe_context_run(args.context, &entry, 0, NULL, NULL, NULL) < 0 )
+    if ( spe_context_run(args.context, &entry, 0, &(args.parameters), NULL, NULL) < 0 )
 	fail("SPE kontekstin käynnistys ei onnistunut");
 
     puts("Hei, olen säie ja kuolen ihan kohta!");
@@ -53,7 +55,7 @@ void *run_spu_thread(void *arg)
 }
 
 
-int draw_fractal(COLOR *image, int width, int height)
+int draw_fractal(char *image, int width, int height)
 {
     int i, spu_threads;
     thread_arguments thread_args[MAX_SPU_THREADS];
@@ -81,6 +83,8 @@ int draw_fractal(COLOR *image, int width, int height)
 	f->im_offset = 0.0f;
 	f->zoom = 1.0f;
 	f->max_iteration = 100;
+
+	printf("draw_fractal(): width = %d\n", width);
 
 	/* Tähän sitten jonkunlainen fiksu jako säikeille,
 	 * kun on useampi säie.
@@ -161,7 +165,7 @@ int main(int argc, char *argv[])
     int img_width = 300, img_height = 300;
     int should_draw_window = 0;
     char filename[MAX_FILE_NAME_LENGTH + 1];
-    COLOR *image;
+    char *image;
 
     memset(filename, '\0', MAX_FILE_NAME_LENGTH + 1);
 
@@ -199,7 +203,7 @@ int main(int argc, char *argv[])
 	exit(0);
     }
 
-    image = (COLOR *) memalign(16, img_width*img_height*sizeof(COLOR));
+    image = (char *) memalign(16, img_width*img_height*BYTES_PER_PIXEL);
 
     if (should_draw_window) {
 	Display *display;
