@@ -208,9 +208,10 @@ int main(int argc, char *argv[])
 	GC gc;
 	XEvent e;
 
-	if ((display = XOpenDisplay(NULL)) == NULL)
-	    // Jotain fiksumpaa tähän...
-	    fail("XOpenDisplay() ei onnistunut");
+	if ((display = XOpenDisplay(NULL)) == NULL) {
+	    fprintf(stderr, "XOpenDisplay() ei onnistunut\n");
+	    exit(1);
+	}
 
 	window = create_window(display, &screen);
 	gc = DefaultGC(display, screen);
