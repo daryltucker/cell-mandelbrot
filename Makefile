@@ -1,5 +1,6 @@
 
 PPU_CC_FLAGS=-m64 -Wall
+SPU_CC_FLAGS=-Wall
 LFLAGS=-lpthread -lspe2 -lX11
 BIN=mandelbrot
 
@@ -19,8 +20,8 @@ image.o: image.c
 spe_fractal_csf.o: spe_fractal
 	embedspu -m64 fractal_handle spe_fractal spe_fractal_csf.o
 
-spe_fractal: spu_fractal_driver.s
-	spu-gcc spu_fractal_driver.s -o spe_fractal
+spe_fractal: spu_fractal_driver.c
+	spu-gcc $(SPU_CC_FLAGS) spu_fractal_driver.c -o spe_fractal
 
 
 clean:
