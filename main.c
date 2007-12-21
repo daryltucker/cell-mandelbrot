@@ -5,6 +5,7 @@
  */
 
 #include "image.h"
+#include "fractal.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -26,18 +27,7 @@ extern spe_program_handle_t fractal_handle;
 
 typedef struct {
     spe_context_ptr_t context __attribute__((aligned(16)));
-    char *image __attribute__((aligned(16)));
-    uint width __attribute__((aligned(16)));
-    uint height __attribute__((aligned(16)));
-    float re_offset __attribute__((aligned(16)));
-    float im_offset __attribute__((aligned(16)));
-    float zoom __attribute__((aligned(16)));
-    uint max_iteration __attribute__((aligned(16)));
-    uint area_x __attribute__((aligned(16)));
-    uint area_y __attribute__((aligned(16)));
-    uint area_width __attribute__((aligned(16)));
-    uint area_heigth __attribute__((aligned(16)));
-    uint bytes_per_pixel __attribute__((aligned(16)));
+    fractal_parameters parameters;
 } thread_arguments;
 
 
@@ -82,39 +72,39 @@ int draw_fractal(COLOR *image, int width, int height)
 
     for (i=0; i<spu_threads; i++)
     {
-	thread_arguments *arg = &thread_args[i];
+	fractal_parameters *f = &thread_args[i].parameters;
 
-	arg->image = (char *) image;
-	arg->width = (uint) width;
-	arg->height = (uint) height;
-	arg->re_offset = 0.0f;
-	arg->im_offset = 0.0f;
-	arg->zoom = 1.0f;
-	arg->max_iteration = 100;
+	f->image = (char *) image;
+	f->width = (uint) width;
+	f->height = (uint) height;
+	f->re_offset = 0.0f;
+	f->im_offset = 0.0f;
+	f->zoom = 1.0f;
+	f->max_iteration = 100;
 
 	/* Tähän sitten jonkunlainen fiksu jako säikeille,
 	 * kun on useampi säie.
 	 *
 	 * Ja pitää ottaa huomioon rajallinen 256kt muisti.
 	 */
-	arg->area_x = 0;
-	arg->area_y = 0;
-	arg->area_width = (uint) width;
-	arg->area_heigth = (uint) height;
+	f->area_x = 0;
+	f->area_y = 0;
+	f->area_width = (uint) width;
+	f->area_heigth = (uint) height;
 
-	arg->bytes_per_pixel = 3;
+	f->bytes_per_pixel = 3;
 
-	if ((arg->context = spe_context_create(0, NULL)) == NULL)
+	if ((thread_args[i].context = spe_context_create(0, NULL)) == NULL)
 	    fail("Kontekstin luonti ei onnistunut");
 
 	// Tässä ladataan spu-kontekstia...
-	if ( spe_program_load(arg->context, &fractal_handle) != 0 )
+	if ( spe_program_load(thread_args[i].context, &fractal_handle) != 0 )
 	    fail("SPU-ohjelman lataus ei onnistunut");
 
-	pthread_create(&threads[i],
-		       NULL,
-		       &run_spu_thread,
-		       arg);
+	pthread_create( &threads[i],
+			NULL,
+			&run_spu_thread,
+			&thread_args[i] );
     }
 
     // SPE:t laskee kovasti...
