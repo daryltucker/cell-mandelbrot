@@ -6,10 +6,13 @@
 typedef unsigned long long uint64;
 typedef unsigned int uint32;
 
+#define MAX_TRANSFER_SIZE 16384
+
 
 int main(uint64 spe_id, uint64 fractal_parameter_ea)
 {
     fractal_parameters parameters;
+    char image_data_rows[MAX_TRANSFER_SIZE];
 
     // Ladataan parametrit...
     mfc_write_tag_mask(1<<0);  //DMA-tunniste = 0
@@ -17,5 +20,25 @@ int main(uint64 spe_id, uint64 fractal_parameter_ea)
     spu_mfcstat(MFC_TAG_UPDATE_ALL); // Ja odotellaan niitä.
     
     printf("Saatiin mm. width: %u ja area_x: %u\n", parameters.width, parameters.area_x);
+
+    /*
+     * Jos oma siivu ei sovi puskuriin, niin piirretään kerrallaan
+     * niin paljon kuin sopii, ja siirretään piirretty osuus
+     * päämuistiin.
+     *
+     * Tietty ongelman voisi myös hoitaa PPU:sta käsin, säikeiden
+     * kanssa vekslaamalla. Mutta varmaan olis tehokkaampi jos vain
+     * yksi säie tekee oman osuutensa niin ei tule turhia säikeiden
+     * käynnistyksiä.
+     */
+
+    // LOOP:
+
+    //     Piirretään fraktaali puskuriin...
+
+    //     Siirretään data päämuistiin...
+
+    // Odotellaan kaikki siirrot valmiiksi, varmuuden vuoksi.
+    spu_mfcstat(MFC_TAG_UPDATE_ALL);
     return 0;
 }
