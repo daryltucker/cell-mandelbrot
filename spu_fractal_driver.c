@@ -12,9 +12,9 @@ typedef unsigned int uint32;
 int main(uint64 spe_id, uint64 fractal_parameter_ea)
 {
     fractal_parameters parameters;
-    char image_data_rows[MAX_TRANSFER_SIZE];
+    char image_buffer[MAX_TRANSFER_SIZE];
 
-    // Ladataan parametrit...
+    // Ladataan parametrit:
     mfc_write_tag_mask(1<<0);  //DMA-tunniste = 0
     mfc_get(&parameters, fractal_parameter_ea, sizeof(fractal_parameters), 0, 0, 0);
     spu_mfcstat(MFC_TAG_UPDATE_ALL); // Ja odotellaan niitä.

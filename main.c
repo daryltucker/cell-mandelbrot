@@ -13,7 +13,7 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <libspe2.h>
-#include <X11/Xlib.h>
+#include <SDL/SDL.h>
 
 
 #define MAX_SPU_THREADS 6
@@ -145,20 +145,6 @@ void usage(const char *program)
 }
 
 
-Window create_window(Display *d, int *screen)
-{
-    Window w;
-
-    *screen = DefaultScreen(d);
-    w = XCreateSimpleWindow( d, RootWindow(d, *screen),
-			     10, 10, 300, 300, 1,
-			     BlackPixel(d, *screen), WhitePixel(d, *screen) );
-    XSelectInput(d, w, ExposureMask | KeyPressMask);
-    XMapWindow(d, w);
-    return w;
-}
-
-
 int main(int argc, char *argv[])
 {
     int optchar;
@@ -206,40 +192,39 @@ int main(int argc, char *argv[])
     image = (char *) memalign(16, img_width*img_height*BYTES_PER_PIXEL);
 
     if (should_draw_window) {
-	Display *display;
-	int screen;
-	Window window;
-	GC gc;
-	XEvent e;
+	SDL_Event event;
+	int quit = 0;
 
-	if ((display = XOpenDisplay(NULL)) == NULL) {
-	    fprintf(stderr, "XOpenDisplay() ei onnistunut\n");
+	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+	    fprintf(stderr, "SDL_Init() ei onnistunut: %s\n", SDL_GetError());
 	    exit(1);
 	}
 
-	window = create_window(display, &screen);
-	gc = DefaultGC(display, screen);
+	atexit(SDL_Quit);
 
-	for (;;)
+	if (SDL_SetVideoMode(640, 480, 24, SDL_SWSURFACE) == NULL) {
+	    fprintf(stderr, "SDL_SetVideoMode() ei onnistunut: %s",
+		    SDL_GetError());
+	    exit(1);
+	}
+	SDL_WM_SetCaption("Fraktaali", NULL);
+	
+	while (!quit && SDL_WaitEvent(&event))
 	{
-	    XNextEvent(display, &e);
-
-	    switch (e.type)
+	    switch (event.type)
 	    {
-	    case Expose:
-		XDrawString(display, window, gc,
-			    50, 50,
-			    "Hello, World!", strlen("Hello, World!"));
+	    case SDL_QUIT:
+		quit = 1;
 		break;
-	    case KeyPress:
-		goto finished;
+	    case SDL_KEYDOWN:
+	    case SDL_KEYUP:
+		if (event.key.keysym.sym == SDLK_ESCAPE)
+		    quit = 1;
+		break;
 	    default:
 		break;
 	    }
 	}
-
-    finished:
-	XCloseDisplay(display);
 
     } else /* No window */ {
 
