@@ -21,7 +21,7 @@
 
 #define MAX_FILE_NAME_LENGTH 200
 
-#define BYTES_PER_PIXEL 3
+#define BYTES_PER_PIXEL 4
 #define BITS_PER_PIXEL (BYTES_PER_PIXEL * 8)
 #define MAX_IMG_WIDTH 3000
 #define MAX_IMG_HEIGHT 3000
@@ -151,7 +151,7 @@ void usage(const char *program)
 int main(int argc, char *argv[])
 {
     int optchar;
-    int img_width = 300, img_height = 300;
+    int img_width = 100, img_height = 100;
     int should_draw_window = 0;
     char filename[MAX_FILE_NAME_LENGTH + 1];
     char *image;
@@ -200,6 +200,7 @@ int main(int argc, char *argv[])
 
     if (should_draw_window) {
 	SDL_Event event;
+	SDL_Surface *screen;
 	int quit = 0;
 
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -209,12 +210,16 @@ int main(int argc, char *argv[])
 
 	atexit(SDL_Quit);
 
-	if (SDL_SetVideoMode(img_width, img_height, BITS_PER_PIXEL, SDL_SWSURFACE) == NULL) {
+	if ((screen = SDL_SetVideoMode(img_width, img_height,
+				       BITS_PER_PIXEL, SDL_SWSURFACE)) == NULL)
+	{
 	    fprintf(stderr, "SDL_SetVideoMode() ei onnistunut: %s",
 		    SDL_GetError());
 	    exit(1);
 	}
 	SDL_WM_SetCaption("Fraktaali", NULL);
+
+	draw_fractal(image, img_width, img_height);
 	
 	while (!quit && SDL_WaitEvent(&event))
 	{
@@ -222,6 +227,21 @@ int main(int argc, char *argv[])
 	    {
 	    case SDL_QUIT:
 		quit = 1;
+		break;
+	    case SDL_VIDEOEXPOSE:
+		if (SDL_MUSTLOCK(screen)) {
+		    if (SDL_LockSurface(screen) < 0)
+			exit(1);
+		}
+
+		/* Kopioidaan varsin raa'alla tavalla kuva näytön bittikarttaan.
+		 *
+		 * Toivottavasti formaatit ovat samat!
+		 */
+		memcpy(screen->pixels, image, img_width*img_height*BYTES_PER_PIXEL);
+
+		if (SDL_MUSTLOCK(screen))
+		    SDL_UnlockSurface(screen);
 		break;
 	    case SDL_KEYDOWN:
 	    case SDL_KEYUP:
