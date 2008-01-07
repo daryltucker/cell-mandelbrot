@@ -22,6 +22,7 @@
 #define MAX_FILE_NAME_LENGTH 200
 
 #define BYTES_PER_PIXEL 3
+#define BITS_PER_PIXEL (BYTES_PER_PIXEL * 8)
 
 
 extern spe_program_handle_t fractal_handle;
@@ -96,7 +97,7 @@ int draw_fractal(char *image, int width, int height)
 	f->area_width = (uint) width;
 	f->area_heigth = (uint) height;
 
-	f->bytes_per_pixel = 3;
+	f->bytes_per_pixel = BYTES_PER_PIXEL;
 
 	if ((thread_args[i].context = spe_context_create(0, NULL)) == NULL)
 	    fail("Kontekstin luonti ei onnistunut");
@@ -189,6 +190,11 @@ int main(int argc, char *argv[])
 	exit(0);
     }
 
+    if (should_draw_window) {
+	if (img_width > 2000) img_width = 2000;
+	if (img_height > 2000) img_height = 2000;
+    }
+
     image = (char *) memalign(16, img_width*img_height*BYTES_PER_PIXEL);
 
     if (should_draw_window) {
@@ -202,7 +208,7 @@ int main(int argc, char *argv[])
 
 	atexit(SDL_Quit);
 
-	if (SDL_SetVideoMode(640, 480, 24, SDL_SWSURFACE) == NULL) {
+	if (SDL_SetVideoMode(img_width, img_height, BITS_PER_PIXEL, SDL_SWSURFACE) == NULL) {
 	    fprintf(stderr, "SDL_SetVideoMode() ei onnistunut: %s",
 		    SDL_GetError());
 	    exit(1);
@@ -214,6 +220,7 @@ int main(int argc, char *argv[])
 	    switch (event.type)
 	    {
 	    case SDL_QUIT:
+		// Lopetellaan saikeet siististi...
 		quit = 1;
 		break;
 	    case SDL_KEYDOWN:
