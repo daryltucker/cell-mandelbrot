@@ -23,6 +23,8 @@
 
 #define BYTES_PER_PIXEL 3
 #define BITS_PER_PIXEL (BYTES_PER_PIXEL * 8)
+#define MAX_IMG_WIDTH 3000
+#define MAX_IMG_HEIGHT 3000
 
 
 extern spe_program_handle_t fractal_handle;
@@ -166,6 +168,8 @@ int main(int argc, char *argv[])
 		usage(argv[0]);
 		exit(2);
 	    }
+	    if (img_width > MAX_IMG_WIDTH)
+		img_width = MAX_IMG_WIDTH;
 	    break;
 	case 'h':
 	    img_height = atoi(optarg);
@@ -173,6 +177,8 @@ int main(int argc, char *argv[])
 		usage(argv[0]);
 		exit(2);
 	    }
+	    if (img_height > MAX_IMG_HEIGHT)
+		img_height = MAX_IMG_HEIGHT;
 	    break;
 	case 'o':
 	    strncpy(filename, optarg, MAX_FILE_NAME_LENGTH);
@@ -188,11 +194,6 @@ int main(int argc, char *argv[])
     if (!should_draw_window && strlen(filename) == 0) {
 	usage(argv[0]);
 	exit(0);
-    }
-
-    if (should_draw_window) {
-	if (img_width > 2000) img_width = 2000;
-	if (img_height > 2000) img_height = 2000;
     }
 
     image = (char *) memalign(16, img_width*img_height*BYTES_PER_PIXEL);
@@ -220,7 +221,6 @@ int main(int argc, char *argv[])
 	    switch (event.type)
 	    {
 	    case SDL_QUIT:
-		// Lopetellaan saikeet siististi...
 		quit = 1;
 		break;
 	    case SDL_KEYDOWN:
