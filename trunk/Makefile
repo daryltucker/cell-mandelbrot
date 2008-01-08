@@ -40,4 +40,4 @@ mandelbrot.o: mandelbrot.c
 ##### YM.
 
 clean:
-	rm -rf *.o $(BIN)
+	rm -rf *.o $(BIN) spu_fractal_drawer
