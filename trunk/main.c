@@ -198,10 +198,13 @@ int main(int argc, char *argv[])
 
     image = (char *) memalign(16, img_width*img_height*BYTES_PER_PIXEL);
 
+    //Testing...
+    memset(image, '\0', img_width*img_height*BYTES_PER_PIXEL);
+
     if (should_draw_window) {
 	SDL_Event event;
 	SDL_Surface *screen;
-	int quit = 0;
+	int i, quit = 0;
 
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
 	    fprintf(stderr, "SDL_Init() ei onnistunut: %s\n", SDL_GetError());
@@ -220,7 +223,14 @@ int main(int argc, char *argv[])
 	SDL_WM_SetCaption("Fraktaali", NULL);
 
 	draw_fractal(image, img_width, img_height);
-	
+
+	//Piirtiköhän se nyt mitään?
+	for (i=0; i<img_width*img_height*BYTES_PER_PIXEL; i++)
+	{
+	    if (image[i] != '\0')
+		printf("Ei nolla: %c", image[i]);
+	}
+
 	while (!quit && SDL_WaitEvent(&event))
 	{
 	    switch (event.type)

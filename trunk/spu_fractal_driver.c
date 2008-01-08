@@ -2,6 +2,7 @@
 #include <spu_intrinsics.h>
 #include <spu_mfcio.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 typedef unsigned long long uint64;
 typedef unsigned int uint32;
@@ -13,6 +14,7 @@ int main(uint64 spe_id, uint64 fractal_parameter_ea)
 {
     fractal_parameters parameters;
     char image_buffer[MAX_TRANSFER_SIZE];
+    int i;
 
     // Ladataan parametrit:
     mfc_write_tag_mask(1<<0);  //DMA-tunniste = 0
@@ -50,10 +52,21 @@ int main(uint64 spe_id, uint64 fractal_parameter_ea)
 			0, 0, foo_bar_size, foo_bar_size,
 			(uint) parameters.bytes_per_pixel);
 
-/*     mfc_put(image_buffer, */
-/* 	    parameters.image, */
-/* 	    parameters.width*parameters.height*parameters.bytes_per_pixel, */
-/* 	    0, 0, 0); */
+    /*
+     * Pannaan sitten satunnaista dataa jos ei muuten... 
+     */
+    for (i=0; i<MAX_TRANSFER_SIZE; i++)
+    {
+	image_buffer[i] = (char) rand();
+    }
+
+    /* Kovasti pukkaa varoitusta image_buffer-parametrista, ei auta
+     * vaikka castaa void*:ksi.
+     */
+    mfc_put(image_buffer,
+	    parameters.image,
+	    parameters.width*parameters.height*parameters.bytes_per_pixel,
+	    0, 0, 0);
 
     // Odotellaan kaikki siirrot valmiiksi, varmuuden vuoksi.
     spu_mfcstat(MFC_TAG_UPDATE_ALL);
