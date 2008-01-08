@@ -42,14 +42,11 @@ int main(uint64 spe_id, uint64 fractal_parameter_ea)
 
 
     //Piirret‰‰n yksi osa kuvasta noin kokeeksi:
-
-    uint foo_bar_size = 100;
-	
     draw24bitMandelbrot(image_buffer,
 			parameters.width,
 			parameters.height,
 			0.0, 0.0, 1.0, 100,
-			0, 0, foo_bar_size, foo_bar_size,
+			0, 0, parameters.width, parameters.height,
 			(uint) parameters.bytes_per_pixel);
 
     /*
