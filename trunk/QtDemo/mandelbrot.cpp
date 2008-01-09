@@ -1,14 +1,8 @@
 
 #include <QPainter>
-#include "mandelbrot.h"
 #include <QMessageBox>
-
-extern "C" void draw24bitMandelbrot(char *image, uint width, uint height,
-                                    double reOffset, double imOffset,
-                                    double zoom, uint maxIteration,
-                                    uint areaX, uint areaY,
-                                    uint areaWidth, uint areaHeight,
-                                    uint bytesPerPixel);
+#include "mandelbrot.h"
+#include "drawfunction.h"
 
 Mandelbrot::Mandelbrot(QWidget *parent) : QWidget(parent)
 {
@@ -69,13 +63,14 @@ void Mandelbrot::drawMandelbrot()
 {
   QImage *img = new QImage(width(), height(), QImage::Format_RGB32);
 
-  draw24bitMandelbrot((char*)img->bits(),
-                      img->width(), img->height(),
+  drawMandelbrotArea( img->width(), img->height(),
                       reOffset, imOffset, zoom, 1000,
+                      (char*)img->bits(),
                       areaX, areaY,
                       areaWidth ? areaWidth : img->width(),
                       areaHeight ? areaHeight : img->height(),
-                      img->numBytes() / (img->width() * img->height()));
+                      img->numBytes() / (img->width() * img->height())
+                     );
 
   if (image)
     delete image;
