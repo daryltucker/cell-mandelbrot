@@ -4,9 +4,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef unsigned long long uint64;
-typedef unsigned int uint32;
-
 #define MAX_TRANSFER_SIZE 16384
 
 
