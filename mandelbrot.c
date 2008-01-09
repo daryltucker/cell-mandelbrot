@@ -5,12 +5,12 @@
 #define MIN(_A_, _B_) ((_A_ < _B_) ? _A_ : _B_)
 
 
-void draw24bitMandelbrot(char *image, uint width, uint height,
+void draw24bitMandelbrot(char *image, uint32 width, uint32 height,
                          double reOffset, double imOffset,
-                         double zoom, uint maxIteration,
-                         uint areaX, uint areaY,
-                         uint areaWidth, uint areaHeight,
-                         uint bytesPerPixel)
+                         double zoom, uint32 maxIteration,
+                         uint32 areaX, uint32 areaY,
+                         uint32 areaWidth, uint32 areaHeight,
+                         uint32 bytesPerPixel)
 {
   double x0, y0, x, y, xTemp, yTemp;
   double scale, mandSize, offsetX, offsetY;
@@ -53,7 +53,7 @@ void draw24bitMandelbrot(char *image, uint width, uint height,
         color = 0;
       for (k = bytesPerPixel - 1; k >= 0; k--)
         *(line + bytesPerPixel * i + (bytesPerPixel - k - 1)) =
-          (color & ((uint)0xFF << (8*k))) >> (8*k);
+          (color & ((uint32)0xFF << (8*k))) >> (8*k);
     }
   }
 }

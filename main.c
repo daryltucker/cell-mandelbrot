@@ -32,7 +32,7 @@ extern spe_program_handle_t fractal_handle;
 
 typedef struct {
     spe_context_ptr_t context __attribute__((aligned(16)));
-    fractal_parameters parameters;
+    fractal_parameters parameters __attribute__((aligned(16)));
 } thread_arguments;
 
 
@@ -79,7 +79,7 @@ int draw_fractal(char *image, int width, int height)
     {
 	fractal_parameters *f = &thread_args[i].parameters;
 
-	f->image = (char *) image;
+	f->image = (uint64) image;
 	f->width = (uint) width;
 	f->height = (uint) height;
 	f->re_offset = 0.0f;
