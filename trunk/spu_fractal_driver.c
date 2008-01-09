@@ -17,8 +17,9 @@ int main(uint64 spe_id, uint64 fractal_parameter_ea)
     mfc_write_tag_mask(1<<0);  //DMA-tunniste = 0
     mfc_get(&parameters, fractal_parameter_ea, sizeof(fractal_parameters), 0, 0, 0);
     spu_mfcstat(MFC_TAG_UPDATE_ALL); // Ja odotellaan niitä.
-    
-    printf("Saatiin mm. width: %u ja area_x: %u\n", parameters.width, parameters.area_x);
+
+    printf("Saatiin mm. width: %u, height: %u ja area_x: %u\n",
+	   parameters.width, parameters.height, parameters.area_x);
 
     /*
      * Jos oma siivu ei sovi puskuriin, niin piirretään kerrallaan
@@ -40,10 +41,10 @@ int main(uint64 spe_id, uint64 fractal_parameter_ea)
 
     //Piirretään yksi osa kuvasta noin kokeeksi:
     draw24bitMandelbrot(image_buffer,
-			parameters.width,
-			parameters.height,
+			50,
+			50,
 			0.0, 0.0, 1.0, 100,
-			0, 0, parameters.width, parameters.height,
+			0, 0, 50, 50,
 			(uint) parameters.bytes_per_pixel);
 
     /*
@@ -59,7 +60,8 @@ int main(uint64 spe_id, uint64 fractal_parameter_ea)
      */
     mfc_put(image_buffer,
 	    parameters.image,
-	    parameters.width*parameters.height*parameters.bytes_per_pixel,
+	    //parameters.width*parameters.height*parameters.bytes_per_pixel,
+	    MAX_TRANSFER_SIZE,
 	    0, 0, 0);
 
     // Odotellaan kaikki siirrot valmiiksi, varmuuden vuoksi.
