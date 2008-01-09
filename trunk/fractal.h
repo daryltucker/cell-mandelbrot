@@ -2,7 +2,7 @@ typedef unsigned int uint;
 
 
 typedef struct {
-    char *image __attribute__((aligned(16)));
+    unsigned long long image __attribute__((aligned(16)));
     uint width __attribute__((aligned(16)));
     uint height __attribute__((aligned(16)));
     float re_offset __attribute__((aligned(16)));
