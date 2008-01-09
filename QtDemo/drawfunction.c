@@ -4,12 +4,32 @@
 #define MIN(_A_, _B_) ((_A_ < _B_) ? _A_ : _B_)
 #define uint unsigned int
 
-void draw24bitMandelbrot(char *image, uint width, uint height,
+//! A function that will draw a mandelbrot on a given buffer.
+/*! This function will draw a specified area of the mandelbrot fractal
+    to a given image. The image can also be given as portions of the 
+    whole image. This will provide a convenient way to draw the whole 
+    image in parallel.
+   \param width The width of the whole image.
+   \param height The height of the whole image.
+   \param reOffset The offset in the real-axes on a complex plane.
+   \param imOffset The offset in the imaginary-axes on a complex plane.
+   \param zoom The level of the magnification.
+   \param maxIteration The maximum count of iterations performed on 
+    each pixel.
+   \param areaBuffer A pointer to the beginning of the drawable area.
+   \param areaX The horizontal starting point on the whole image.
+   \param areaY The vertical starting point on the whole image.
+   \param areaWidth The width of the drawable area.
+   \param areaHeight The height of the drawable area.
+   \bytesPerPixel The amount of bytes reserved for one pixel.
+ */
+void drawMandelbrotArea( uint width, uint height,
                          double reOffset, double imOffset,
                          double zoom, uint maxIteration,
+                         char *areaBuffer,
                          uint areaX, uint areaY,
                          uint areaWidth, uint areaHeight,
-                         uint bytesPerPixel)
+                         uint bytesPerPixel )
 {
   double x0, y0, x, y, xTemp, yTemp;
   double scale, mandSize, offsetX, offsetY;
@@ -26,7 +46,7 @@ void draw24bitMandelbrot(char *image, uint width, uint height,
 
   for (j = areaY; j < areaHeight + areaY; j++)
   {
-    line = image + (width * j * bytesPerPixel);
+    line = areaBuffer + (width * (j - areaY) * bytesPerPixel);
     for (i = areaX; i < areaWidth + areaX; i++)
     {
       x0 = i * scale + offsetX;
@@ -51,7 +71,7 @@ void draw24bitMandelbrot(char *image, uint width, uint height,
       if (iteration == maxIteration)
         color = 0;
       for (k = bytesPerPixel - 1; k >= 0; k--)
-        *(line + bytesPerPixel * i + (bytesPerPixel - k - 1)) =
+        *(line + bytesPerPixel * (i - areaX) + (bytesPerPixel - k - 1)) =
           (color & ((uint)0xFF << (8*k))) >> (8*k);
     }
   }
