@@ -87,8 +87,6 @@ int draw_fractal(char *image, int width, int height)
 	f->zoom = 1.0f;
 	f->max_iteration = 100;
 
-	printf("draw_fractal(): width = %d\n", width);
-
 	/* Tähän sitten jonkunlainen fiksu jako säikeille,
 	 * kun on useampi säie.
 	 *
@@ -224,12 +222,16 @@ int main(int argc, char *argv[])
 
 	draw_fractal(image, img_width, img_height);
 
+	printf("Kuvan koko on %dx%dx%d = %d\n", img_width, img_height, BYTES_PER_PIXEL,
+	       img_width*img_height*BYTES_PER_PIXEL);
+
 	//Piirtiköhän se nyt mitään?
 	for (i=0; i<img_width*img_height*BYTES_PER_PIXEL; i++)
 	{
 	    if (image[i] != '\0')
-		printf("Ei nolla: %c", image[i]);
+		printf("<<%c>>", image[i]);
 	}
+	printf("\n");
 
 	while (!quit && SDL_WaitEvent(&event))
 	{
@@ -248,7 +250,7 @@ int main(int argc, char *argv[])
 		 *
 		 * Toivottavasti formaatit ovat samat!
 		 */
-		memcpy(screen->pixels, image, img_width*img_height*BYTES_PER_PIXEL);
+//		memcpy(screen->pixels, image, img_width*img_height*BYTES_PER_PIXEL);
 
 		if (SDL_MUSTLOCK(screen))
 		    SDL_UnlockSurface(screen);
