@@ -40,12 +40,7 @@ int main(uint64 spe_id, uint64 fractal_parameter_ea)
 
 
     //Piirretään yksi osa kuvasta noin kokeeksi:
-    draw24bitMandelbrot(image_buffer,
-			50,
-			50,
-			0.0, 0.0, 1.0, 100,
-			0, 0, 50, 50,
-			(uint) parameters.bytes_per_pixel);
+    // ...
 
     /*
      * Pannaan sitten satunnaista dataa jos ei muuten... 
