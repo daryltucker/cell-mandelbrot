@@ -128,18 +128,35 @@ int draw_fractal(char *image, int width, int height)
 }
 
 
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
+
+
+/* Kopioi kuvan SDL_Surface-tyyppiseen kuvaan.
+ *
+ * Kuvien täytyy olla samassa formaatissa.
+ */
 void copy_image(const char *image, int width, int height, SDL_Surface *s)
 {
+    int x, y;
+    int width_bytes = MIN(width, s->w) * s->format->BytesPerPixel;
+    int h = MIN(height, s->h);
+    char *pixels = (char *) s->pixels;
+    char *buf_p = pixels;
+    const char *img_p = image;
+
     if (SDL_MUSTLOCK(s)) {
         if (SDL_LockSurface(s) < 0)
             exit(1);
     }
 
-    /* Kopioidaan varsin raa'alla tavalla kuva näytön bittikarttaan.
-     *
-     * Toivottavasti formaatit ovat samat!
-     */
-    memcpy(s->pixels, image, width*height*BYTES_PER_PIXEL);
+    for (y=0; y < h; y++)
+    {
+        buf_p = pixels + y * width_bytes;
+        for (x=0; x < width_bytes; x++)
+        {
+            *buf_p++ = *img_p++;
+        }
+    }
 
     if (SDL_MUSTLOCK(s))
         SDL_UnlockSurface(s);
