@@ -128,6 +128,24 @@ int draw_fractal(char *image, int width, int height)
 }
 
 
+void copy_image(const char *image, int width, int height, SDL_Surface *s)
+{
+    if (SDL_MUSTLOCK(s)) {
+        if (SDL_LockSurface(s) < 0)
+            exit(1);
+    }
+
+    /* Kopioidaan varsin raa'alla tavalla kuva näytön bittikarttaan.
+     *
+     * Toivottavasti formaatit ovat samat!
+     */
+    memcpy(s->pixels, image, width*height*BYTES_PER_PIXEL);
+
+    if (SDL_MUSTLOCK(s))
+        SDL_UnlockSurface(s);
+}
+
+
 void usage(const char *program)
 {
     printf("The super-fast fractal drawing program\n"
@@ -202,7 +220,7 @@ int main(int argc, char *argv[])
     if (should_draw_window) {
 	SDL_Event event;
 	SDL_Surface *screen;
-	int i, quit = 0;
+	int quit = 0;
 
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
 	    fprintf(stderr, "SDL_Init() ei onnistunut: %s\n", SDL_GetError());
@@ -225,13 +243,7 @@ int main(int argc, char *argv[])
 	printf("Kuvan koko on %dx%dx%d = %d\n", img_width, img_height, BYTES_PER_PIXEL,
 	       img_width*img_height*BYTES_PER_PIXEL);
 
-	//Piirtiköhän se nyt mitään?
-	for (i=0; i<img_width*img_height*BYTES_PER_PIXEL; i++)
-	{
-	    if (image[i] != '\0')
-		printf("<<%c>>", image[i]);
-	}
-	printf("\n");
+        copy_image(image, img_width, img_height, screen);
 
 	while (!quit && SDL_WaitEvent(&event))
 	{
@@ -241,19 +253,7 @@ int main(int argc, char *argv[])
 		quit = 1;
 		break;
 	    case SDL_VIDEOEXPOSE:
-		if (SDL_MUSTLOCK(screen)) {
-		    if (SDL_LockSurface(screen) < 0)
-			exit(1);
-		}
-
-		/* Kopioidaan varsin raa'alla tavalla kuva näytön bittikarttaan.
-		 *
-		 * Toivottavasti formaatit ovat samat!
-		 */
-//		memcpy(screen->pixels, image, img_width*img_height*BYTES_PER_PIXEL);
-
-		if (SDL_MUSTLOCK(screen))
-		    SDL_UnlockSurface(screen);
+                copy_image(image, img_width, img_height, screen);
 		break;
 	    case SDL_KEYDOWN:
 	    case SDL_KEYUP:
