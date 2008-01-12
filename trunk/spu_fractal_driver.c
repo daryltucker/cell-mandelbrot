@@ -40,15 +40,10 @@ int main(uint64 spe_id, uint64 fractal_parameter_ea)
 
 
     //Piirretään yksi osa kuvasta noin kokeeksi:
-    // ...
-
-    /*
-     * Pannaan sitten satunnaista dataa jos ei muuten... 
-     */
-    for (i=0; i<MAX_TRANSFER_SIZE; i++)
-    {
-	image_buffer[i] = (char) rand();
-    }
+    drawMandelbrotArea( 50, 50,
+                        0.0, 0.0, 1.0, 100, image_buffer,
+                        0, 0, 50, 50,
+                        (uint) parameters.bytes_per_pixel );
 
     /* Kovasti pukkaa varoitusta image_buffer-parametrista, ei auta
      * vaikka castaa void*:ksi.
