@@ -19,9 +19,10 @@ typedef struct {
 } fractal_parameters;
 
 
-void draw24bitMandelbrot(char *image, uint32 width, uint32 height,
+void drawMandelbrotArea( uint32 width, uint32 height,
                          double reOffset, double imOffset,
                          double zoom, uint32 maxIteration,
+                         char *areaBuffer,
                          uint32 areaX, uint32 areaY,
                          uint32 areaWidth, uint32 areaHeight,
-                         uint32 bytesPerPixel);
+                         uint32 bytesPerPixel );
