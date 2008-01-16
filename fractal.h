@@ -1,7 +1,10 @@
 
+// Define the size of the mandelbrot area, ie. 4 -> x e[-2,2], y e[-2,2].
+#define MANDELBROT_DEFAULT_SIZE 4.0
+
+
 typedef unsigned int uint32;
 typedef unsigned long long uint64;
-
 
 typedef struct {
     uint64 image __attribute__((aligned(16)));
