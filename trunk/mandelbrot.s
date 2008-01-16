@@ -29,11 +29,28 @@ asm_mandelbrot:
 ## )
 
 ## {
-##   double x0, y0, x, y, xTemp, yTemp;
-##   double scale, mandSize, offsetX, offsetY;
-##   unsigned int i, j, iteration, color, maxColor;
-##   signed int k;
-##   char *line;
+##   double 
+##        $14  <-- x0,
+##        $15  <-- y0,
+##        $16  <-- x,
+##        $17  <-- y,
+##        $18  <-- xTemp,
+##        $19  <-- yTemp;
+##   double 
+##        $20  <-- scale,
+##        $21  <-- mandSize,
+##        $22  <-- offsetX,
+##        $23  <-- offsetY;
+##   unsigned int 
+##        $24  <-- i,
+##        $25  <-- j,
+##        $26  <-- iteration,
+##        $27  <-- color,
+##        $28  <-- maxColor;
+##   signed int 
+##        $29  <-- k;
+##   char *
+##        $30  <-- line;
 
 ##   mandSize = MANDELBROT_DEFAULT_SIZE / zoom;
 ##   scale = mandSize / MIN(width, height);

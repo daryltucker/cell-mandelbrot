@@ -1,7 +1,5 @@
 #include "fractal.h"
 
-// Define the size of the mandelbrot area, ie. 4 -> x e[-2,2], y e[-2,2].
-#define MANDELBROT_DEFAULT_SIZE 4.0
 #define MIN(_A_, _B_) ((_A_ < _B_) ? _A_ : _B_)
 
 
