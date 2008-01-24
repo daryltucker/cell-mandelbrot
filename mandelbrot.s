@@ -1,11 +1,17 @@
 ### Mandelbrotin fraktaalin piirt‰v‰ funktio
+###
+### T‰ss‰ k‰ytet‰‰n aina float-arvoja double-arvojen sijaan.
 
 .data
-
+	
 .align 4
+mandelbrot_default_size:	
+	.float, 0f4.0
+	
 
 .equ LR_OFFSET, 16
 # .equ FRAME_SIZE, 
+
 
 asm_mandelbrot:	
 	## Prologi
@@ -16,9 +22,9 @@ asm_mandelbrot:
 ## void drawMandelbrotArea(
 ## $3    <-- uint32 width
 ## $4    <-- uint32 height
-## $5    <-- double reOffset
-## $6    <-- double imOffset
-## $7    <-- double zoom
+## $5    <-- float reOffset
+## $6    <-- float imOffset
+## $7    <-- float zoom
 ## $8    <-- uint32 maxIteration
 ## $9    <-- char *areaBuffer
 ## $10   <-- uint32 areaX
@@ -29,34 +35,34 @@ asm_mandelbrot:
 ## )
 
 ## {
-##   double 
-##        $14  <-- x0,
-##        $15  <-- y0,
-##        $16  <-- x,
-##        $17  <-- y,
-##        $18  <-- xTemp,
-##        $19  <-- yTemp;
-##   double 
-##        $20  <-- scale,
-##        $21  <-- mandSize,
-##        $22  <-- offsetX,
-##        $23  <-- offsetY;
+##   float 
+##        $80  <-- x0,
+##        $81  <-- y0,
+##        $82  <-- x,
+##        $83  <-- y,
+##        $84  <-- xTemp,
+##        $85  <-- yTemp;
+##   float 
+##        $86  <-- scale,
+##        $87  <-- mandSize,
+##        $88  <-- offsetX,
+##        $89  <-- offsetY;
 ##   unsigned int 
-##        $24  <-- i,
-##        $25  <-- j,
-##        $26  <-- iteration,
-##        $27  <-- color,
-##        $28  <-- maxColor;
+##        $90  <-- i,
+##        $91  <-- j,
+##        $92  <-- iteration,
+##        $93  <-- color,
+##        $94  <-- maxColor;
 ##   signed int 
-##        $29  <-- k;
+##        $95  <-- k;
 ##   char *
-##        $30  <-- line;
+##        $96  <-- line;
 
 ##   mandSize = MANDELBROT_DEFAULT_SIZE / zoom;
 ##   scale = mandSize / MIN(width, height);
-##   offsetX = mandSize / -2.0 * (width > height ? (double)width/height : 1.0)
+##   offsetX = mandSize / -2.0 * (width > height ? (float)width/height : 1.0)
 ##             + reOffset;
-##   offsetY = mandSize / -2.0 * (width < height ? (double)height/width : 1.0)
+##   offsetY = mandSize / -2.0 * (width < height ? (float)height/width : 1.0)
 ##             + imOffset;
 
 ##   for (j = areaY; j < areaHeight + areaY; j++)
@@ -82,7 +88,7 @@ asm_mandelbrot:
 ##       maxColor = 0;
 ##       for (k = 0; k < bytesPerPixel; k++)
 ##         maxColor = (maxColor << 8) + 0xFF;
-##       color = (unsigned int)((double)(iteration)/maxIteration * maxColor);
+##       color = (unsigned int)((float)(iteration)/maxIteration * maxColor);
 ##       if (iteration == maxIteration)
 ##         color = 0;
 ##       for (k = bytesPerPixel - 1; k >= 0; k--)
