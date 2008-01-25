@@ -112,6 +112,12 @@ int draw_fractal(char *image, int width, int height)
 			&thread_args[i] );
     }
 
+
+    // Laitetaan säikeille viesti milloin voi alloittaa.
+    unsigned int message = 1;
+    for (i=0; i<spu_threads; i++)
+        spe_in_mbox_write(thread_args[i].context, &message, 1, SPE_MBOX_ANY_NONBLOCKING);
+
     // SPE:t laskee kovasti...
     puts("Pääohjelma odottelee säikeitä...");
 

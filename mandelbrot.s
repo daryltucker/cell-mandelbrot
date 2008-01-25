@@ -59,7 +59,14 @@ asm_mandelbrot:
 ##        $96  <-- line;
 
 ##   mandSize = MANDELBROT_DEFAULT_SIZE / zoom;
+	frest $97, $7		# r97 = 1.0f / r7;
+	fi $97, $7, $97		# tarkennetaan käänteislukua
+	lqr $98, mandelbrot_default_size
+	fm $87, $98, $97		# r87 = r98 * r97
+
 ##   scale = mandSize / MIN(width, height);
+	cgt $98, $3, $4
+
 ##   offsetX = mandSize / -2.0 * (width > height ? (float)width/height : 1.0)
 ##             + reOffset;
 ##   offsetY = mandSize / -2.0 * (width < height ? (float)height/width : 1.0)
