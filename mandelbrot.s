@@ -66,6 +66,15 @@ asm_mandelbrot:
 
 ##   scale = mandSize / MIN(width, height);
 	cgt $98, $3, $4
+	## Tähän varmaan on elegantimpikin ratkaisu...
+	brz $98, width_min
+	## Okei, $98:iin tulee minimi
+height_min:	
+	lr $98, $4
+	br min_done
+width_min:
+	lr $98, $3
+min_done:	
 
 ##   offsetX = mandSize / -2.0 * (width > height ? (float)width/height : 1.0)
 ##             + reOffset;
