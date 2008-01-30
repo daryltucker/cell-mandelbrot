@@ -10,10 +10,12 @@ mandelbrot_default_size:
 	
 
 .equ LR_OFFSET, 16
-# .equ FRAME_SIZE, 
+.equ FRAME_SIZE, 32		# Ei pinomuuttujia
 
 
-asm_mandelbrot:	
+.global drawMandelbrotArea
+.type drawMandelbrotArea,@function
+drawMandelbrotArea:	
 	## Prologi
 	stqd $lr, LR_OFFSET($sp)
 	stqd $sp, FRAME_SIZE($sp)
@@ -122,6 +124,6 @@ min_done:
 ## }
 	
 	## Epilogi
-	ai $sp, $sp, FACT_FRAME_SIZE
+	ai $sp, $sp, FRAME_SIZE
 	lqd $lr, LR_OFFSET($sp)
 	bi $lr
