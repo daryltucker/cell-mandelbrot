@@ -13,6 +13,7 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <libspe2.h>
+#include <sys/time.h>
 #include <SDL/SDL.h>
 
 
@@ -25,6 +26,8 @@
 #define BITS_PER_PIXEL (BYTES_PER_PIXEL * 8)
 #define MAX_IMG_WIDTH 3000
 #define MAX_IMG_HEIGHT 3000
+
+#define MEGA 1000000
 
 
 extern spe_program_handle_t fractal_handle;
@@ -58,11 +61,19 @@ void *run_spu_thread(void *arg)
 }
 
 
+inline long long time_between(struct timeval *begin, struct timeval *end)
+{
+    return ((long long) end->tv_sec * MEGA + end->tv_usec)
+        - ((long long) begin->tv_sec * MEGA + begin->tv_usec);
+}
+
+
 int draw_fractal(char *image, int width, int height)
 {
     int i, spu_threads;
     thread_arguments thread_args[MAX_SPU_THREADS];
     pthread_t threads[MAX_SPU_THREADS];
+    struct timeval time_threads_started, time_drawing_started, final_time;
 
     if ((spu_threads = spe_cpu_info_get(SPE_COUNT_USABLE_SPES, -1)) < 1){
 	fprintf(stderr, "Ei ole vapaata SPE-ydintä\n");
@@ -74,6 +85,8 @@ int draw_fractal(char *image, int width, int height)
      */
     spu_threads = 1;
     // if (spu_threads > MAX_SPU_THREADS) spu_threads = MAX_SPU_THREADS;
+
+    gettimeofday(&time_threads_started, NULL);
 
     for (i=0; i<spu_threads; i++)
     {
@@ -118,6 +131,8 @@ int draw_fractal(char *image, int width, int height)
     for (i=0; i<spu_threads; i++)
         spe_in_mbox_write(thread_args[i].context, &message, 1, SPE_MBOX_ANY_NONBLOCKING);
 
+    gettimeofday(&time_drawing_started, NULL);
+
     // SPE:t laskee kovasti...
     puts("Pääohjelma odottelee säikeitä...");
 
@@ -129,6 +144,11 @@ int draw_fractal(char *image, int width, int height)
 	if (spe_context_destroy(thread_args[i].context))
 	    fail("Kontekstin tuhoaminen epäonnistui");
     }
+
+    gettimeofday(&final_time, NULL);
+
+    long long ppe_exec_time = time_between(&time_drawing_started, &final_time);
+    long long total_exec_time = time_between(&time_threads_started, &final_time);
 
     return 0;
 }
@@ -171,7 +191,7 @@ void copy_image(const char *image, int width, int height, SDL_Surface *s)
 
 void usage(const char *program)
 {
-    printf("The super-fast fractal drawing program\n"
+    printf("The super-fast fractal drawing program :P\n"
 	   "Usage, command line:\n"
 	   "%s -o FILE [-w WIDTH] [-h HEIGHT]\n"
 	   "\n"
