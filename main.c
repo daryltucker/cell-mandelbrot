@@ -55,13 +55,11 @@ void *run_spu_thread(void *arg)
     if ( spe_context_run(args.context, &entry, 0, &(args.parameters), NULL, NULL) < 0 )
 	fail("SPE kontekstin käynnistys ei onnistunut");
 
-    puts("Hei, olen säie ja kuolen ihan kohta!");
-
     pthread_exit(NULL);
 }
 
 
-inline long long time_between(struct timeval *begin, struct timeval *end)
+inline long long time_between(const struct timeval *begin, const struct timeval *end)
 {
     return ((long long) end->tv_sec * MEGA + end->tv_usec)
         - ((long long) begin->tv_sec * MEGA + begin->tv_usec);
@@ -150,6 +148,10 @@ int draw_fractal(char *image, int width, int height)
     long long ppe_exec_time = time_between(&time_drawing_started, &final_time);
     long long total_exec_time = time_between(&time_threads_started, &final_time);
 
+    printf("Time used (ms):\n");
+    printf("drawing\t%llu\n", ppe_exec_time);
+    printf("total\t%llu\n\n", total_exec_time);
+
     return 0;
 }
 
@@ -191,7 +193,7 @@ void copy_image(const char *image, int width, int height, SDL_Surface *s)
 
 void usage(const char *program)
 {
-    printf("The super-fast fractal drawing program :P\n"
+    printf("The lightning-fast fractal drawing program :P\n"
 	   "Usage, command line:\n"
 	   "%s -o FILE [-w WIDTH] [-h HEIGHT]\n"
 	   "\n"
