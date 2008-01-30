@@ -74,7 +74,11 @@ height_min:
 	br min_done
 width_min:
 	lr $98, $3
-min_done:	
+min_done:
+	## 1/min $99:iin
+	frest $99, $98
+	fi $99, $98, $99
+	fm $100, $87, $99	## r100 = r87 * r99
 
 ##   offsetX = mandSize / -2.0 * (width > height ? (float)width/height : 1.0)
 ##             + reOffset;
