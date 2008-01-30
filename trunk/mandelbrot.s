@@ -80,6 +80,9 @@ min_done:
 	fi $99, $98, $99
 	fm $100, $87, $99	## r100 = r87 * r99
 
+	## Kerrotaan mitä on saatu tähän asti aikaiseksi
+	wrch SPU_WrOutMbox, $100
+
 ##   offsetX = mandSize / -2.0 * (width > height ? (float)width/height : 1.0)
 ##             + reOffset;
 ##   offsetY = mandSize / -2.0 * (width < height ? (float)height/width : 1.0)

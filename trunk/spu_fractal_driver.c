@@ -24,17 +24,32 @@ int main(uint64 spe_id, uint64 fractal_parameter_ea)
 	   parameters.width, parameters.height, parameters.area_x);
 
     /*
+     * TJ:
+     * 
      * Jos oma siivu ei sovi puskuriin, niin piirret‰‰n kerrallaan
      * niin paljon kuin sopii, ja siirret‰‰n piirretty osuus
      * p‰‰muistiin.
      *
      * Tietty ongelman voisi myˆs hoitaa PPU:sta k‰sin, s‰ikeiden
      * kanssa vekslaamalla. Mutta varmaan olis tehokkaampi jos vain
-     * yksi s‰ie tekee oman osuutensa niin ei tule turhia s‰ikeiden
-     * k‰ynnistyksi‰.
+     * yksi s‰ie hoitaa kokonaan oman osuutensa niin ei tule turhia
+     * s‰ikeiden k‰ynnistyksi‰. Ja p‰‰ohjelmassa jaettaisiin kuva niin
+     * moneen osaan kuin on s‰ikeit‰.
+     *
+     * Tulipa mieleen ett‰ voisiko t‰ss‰ olla jonkinmoinen
+     * kaksoispuskurointi?  Eli onkin kaksi puolet pienemp‰‰ image
+     * bufferia. Kun toinen on pistetty menem‰‰n p‰‰muistiin niin
+     * toiseen ruvettais heti piirt‰m‰‰n. Luulisi ett‰ se olisi
+     * yksinkertainen ja tehokas ratkaisu. Tietysti edelleen pit‰‰
+     * olla tarkistus ett‰ joko puskuri on kopioitu p‰‰muistiin.
+     *
+     * Ja eri puskurien siirroilla pit‰is olla oma tagi, ett‰
+     * tiedet‰‰n odottaa oikeeta siirtoa.
      */
 
     // LOOP:
+
+    //     Odotellaan edellinen siirto valmiiksi
 
     //     Piirret‰‰n fraktaali puskuriin...
 
@@ -43,7 +58,7 @@ int main(uint64 spe_id, uint64 fractal_parameter_ea)
 
     //Piirret‰‰n yksi osa kuvasta noin kokeeksi:
     drawMandelbrotArea( 50, 50,
-                        0.0, 0.0, 1.0, 100, image_buffer,
+                        0.0f, 0.0f, 1.0f, 100, image_buffer,
                         0, 0, 50, 50,
                         (uint) parameters.bytes_per_pixel );
 

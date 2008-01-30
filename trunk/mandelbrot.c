@@ -4,24 +4,24 @@
 
 
 void drawMandelbrotArea( uint32 width, uint32 height,
-                         double reOffset, double imOffset,
-                         double zoom, uint32 maxIteration,
+                         float reOffset, float imOffset,
+                         float zoom, uint32 maxIteration,
                          char *areaBuffer,
                          uint32 areaX, uint32 areaY,
                          uint32 areaWidth, uint32 areaHeight,
                          uint32 bytesPerPixel )
 {
-  double x0, y0, x, y, xTemp, yTemp;
-  double scale, mandSize, offsetX, offsetY;
+  float x0, y0, x, y, xTemp, yTemp;
+  float scale, mandSize, offsetX, offsetY;
   unsigned int i, j, iteration, color, maxColor;
   signed int k;
   char *line;
 
   mandSize = MANDELBROT_DEFAULT_SIZE / zoom;
   scale = mandSize / MIN(width, height);
-  offsetX = mandSize / -2.0 * (width > height ? (double)width/height : 1.0)
+  offsetX = mandSize / -2.0f * (width > height ? (float)width/height : 1.0f)
             + reOffset;
-  offsetY = mandSize / -2.0 * (width < height ? (double)height/width : 1.0)
+  offsetY = mandSize / -2.0f * (width < height ? (float)height/width : 1.0f)
             + imOffset;
 
   for (j = areaY; j < areaHeight + areaY; j++)
@@ -47,7 +47,7 @@ void drawMandelbrotArea( uint32 width, uint32 height,
       maxColor = 0;
       for (k = 0; k < bytesPerPixel; k++)
         maxColor = (maxColor << 8) + 0xFF;
-      color = (unsigned int)((double)(iteration)/maxIteration * maxColor);
+      color = (unsigned int)((float)(iteration)/maxIteration * maxColor);
       if (iteration == maxIteration)
         color = 0;
       for (k = bytesPerPixel - 1; k >= 0; k--)
