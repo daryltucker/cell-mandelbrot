@@ -1,6 +1,6 @@
 
-PPU_CC_FLAGS=-m64 -Wall
-SPU_CC_FLAGS=-Wall
+PPU_CC_FLAGS=-g -m64 -Wall
+SPU_CC_FLAGS=-g -Wall
 LFLAGS=-lpthread -lspe2 -lSDL
 
 
