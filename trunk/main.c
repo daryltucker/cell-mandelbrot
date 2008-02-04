@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <malloc.h>
+#include <assert.h>
 #include <unistd.h>
 #include <pthread.h>
 #include <libspe2.h>
@@ -68,52 +69,46 @@ inline long long time_between(const struct timeval *begin, const struct timeval 
 
 int draw_fractal(char *image, int width, int height)
 {
-    int i, spu_threads;
+    int i, work_threads;
     thread_arguments thread_args[MAX_SPU_THREADS];
     pthread_t threads[MAX_SPU_THREADS];
     struct timeval time_threads_started, time_drawing_started, final_time;
 
-    if ((spu_threads = spe_cpu_info_get(SPE_COUNT_USABLE_SPES, -1)) < 1){
+    if ((work_threads = spe_cpu_info_get(SPE_COUNT_USABLE_SPES, -1)) < 1){
 	fprintf(stderr, "Ei ole vapaata SPE-ydintä\n");
 	exit(1);
     }
 
-    /* Testaillaan fraktaalia ensin yhdellä säikeellä
-     * niin pysyy homma yksinkertaisena.
-     */
-    spu_threads = 1;
-    // if (spu_threads > MAX_SPU_THREADS) spu_threads = MAX_SPU_THREADS;
+    if (work_threads > MAX_SPU_THREADS) work_threads = MAX_SPU_THREADS;
 
     gettimeofday(&time_threads_started, NULL);
 
-    for (i=0; i<spu_threads; i++)
+    uint32 slice_height = (uint32) (height / work_threads);
+    uint32 last_slice_height = (uint32)height - ((uint32)(work_threads - 1)) * slice_height;
+    assert(slice_height <= last_slice_height);
+    assert(last_slice_height - slice_height <= work_threads);
+
+    for (i=0; i<work_threads; i++)
     {
 	fractal_parameters *f = &thread_args[i].parameters;
 
-	f->image = (uint64) image;
-	f->width = (uint) width;
-	f->height = (uint) height;
-	f->re_offset = 0.0f;
-	f->im_offset = 0.0f;
-	f->zoom = 1.0f;
+	f->image         = (uint64) image;
+	f->width         = (uint) width;
+	f->height        = (uint) height;
+	f->re_offset     = 0.0f;
+	f->im_offset     = 0.0f;
+	f->zoom          = 1.0f;
 	f->max_iteration = 100;
-
-	/* Tähän sitten jonkunlainen fiksu jako säikeille,
-	 * kun on useampi säie.
-	 *
-	 * Ja pitää ottaa huomioon rajallinen 256kt muisti.
-	 */
-	f->area_x = 0;
-	f->area_y = 0;
-	f->area_width = (uint) width;
-	f->area_heigth = (uint) height;
+	f->area_x        = 0;
+	f->area_y        = 0 + i*slice_height;
+	f->area_width    = width;
+	f->area_heigth   = ((i == work_threads-1) ? last_slice_height : slice_height);
 
 	f->bytes_per_pixel = BYTES_PER_PIXEL;
 
 	if ((thread_args[i].context = spe_context_create(0, NULL)) == NULL)
 	    fail("Kontekstin luonti ei onnistunut");
 
-	// Tässä ladataan spu-kontekstia...
 	if ( spe_program_load(thread_args[i].context, &fractal_handle) != 0 )
 	    fail("SPU-ohjelman lataus ei onnistunut");
 
@@ -126,15 +121,25 @@ int draw_fractal(char *image, int width, int height)
 
     // Laitetaan säikeille viesti milloin voi alloittaa.
     unsigned int message = 1;
-    for (i=0; i<spu_threads; i++)
+    for (i=0; i<work_threads; i++)
         spe_in_mbox_write(thread_args[i].context, &message, 1, SPE_MBOX_ANY_NONBLOCKING);
 
     gettimeofday(&time_drawing_started, NULL);
 
     // SPE:t laskee kovasti...
-    puts("Pääohjelma odottelee säikeitä...");
 
-    for (i=0; i<spu_threads; i++)
+    // Otetaan debuggaus-viestejä vastaan
+/*     void *ps = get_ps(); */
+/*     unsigned int mb_status; */
+/*     unsigned int new; */
+/*     unsigned int mb_value; */
+/*     do { */
+/*         mb_status = *((volatile unsigned int *) (ps + SPU_Mbox_Stat)); */
+/*         new = mb_status & 0x000000FF; */
+/*     } while (new == 0); */
+/*     mb_value = *((volatile unsigned int *) (ps + SPU_Out_Mbox)); */
+
+    for (i=0; i<work_threads; i++)
     {
 	if (pthread_join(threads[i], NULL))
 	    fail("pthread_join() epäonnistui");
@@ -148,7 +153,7 @@ int draw_fractal(char *image, int width, int height)
     long long ppe_exec_time = time_between(&time_drawing_started, &final_time);
     long long total_exec_time = time_between(&time_threads_started, &final_time);
 
-    printf("Time used (ms):\n");
+    printf("\nTime used (ms):\n");
     printf("drawing\t%llu\n", ppe_exec_time);
     printf("total\t%llu\n\n", total_exec_time);
 

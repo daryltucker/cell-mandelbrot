@@ -20,8 +20,10 @@ int main(uint64 spe_id, uint64 fractal_parameter_ea)
     mfc_get(&parameters, fractal_parameter_ea, sizeof(fractal_parameters), 0, 0, 0);
     spu_mfcstat(MFC_TAG_UPDATE_ALL); // Ja odotellaan niitä.
 
-    printf("Saatiin mm. width: %u, height: %u ja area_x: %u\n",
-	   parameters.width, parameters.height, parameters.area_x);
+    printf("Saatiin mm. area_width: %u, area_height: %u, "
+           "area_x: %u, area_y: %u\n",
+	   parameters.area_width, parameters.area_heigth,
+           parameters.area_x, parameters.area_y);
 
     /*
      * TJ:
