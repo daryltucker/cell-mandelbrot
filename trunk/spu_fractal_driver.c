@@ -6,11 +6,12 @@
 
 #define MAX_TRANSFER_SIZE 16384
 
+char image_buffer[MAX_TRANSFER_SIZE];
+
 
 int main(uint64 spe_id, uint64 fractal_parameter_ea)
 {
     fractal_parameters parameters;
-    char image_buffer[MAX_TRANSFER_SIZE];
     uint32 message;
 
     message = spu_readch(SPU_RdInMbox);
