@@ -2,6 +2,7 @@
 // Define the size of the mandelbrot area, ie. 4 -> x e[-2,2], y e[-2,2].
 #define MANDELBROT_DEFAULT_SIZE 4.0
 
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
 typedef unsigned int uint32;
 typedef unsigned long long uint64;

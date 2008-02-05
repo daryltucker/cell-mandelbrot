@@ -1,7 +1,5 @@
 #include "fractal.h"
 
-#define MIN(_A_, _B_) ((_A_ < _B_) ? _A_ : _B_)
-
 
 void drawMandelbrotArea( uint32 width, uint32 height,
                          float reOffset, float imOffset,

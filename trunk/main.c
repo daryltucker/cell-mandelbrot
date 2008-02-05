@@ -161,9 +161,6 @@ int draw_fractal(char *image, int width, int height)
 }
 
 
-#define MIN(a, b) (((a) < (b)) ? (a) : (b))
-
-
 /* Kopioi kuvan SDL_Surface-tyyppiseen kuvaan.
  *
  * Kuvien täytyy olla samassa formaatissa.
@@ -199,18 +196,15 @@ void copy_image(const char *image, int width, int height, SDL_Surface *s)
 void usage(const char *program)
 {
     printf("The lightning-fast fractal drawing program :P\n"
-	   "Usage, command line:\n"
-	   "%s -o FILE [-w WIDTH] [-h HEIGHT]\n"
-	   "\n"
-	   "Usage, window:\n"
-	   "%s -X\n"
+	   "Usage:\n"
+	   "%s [-o FILE] [-w WIDTH] [-h HEIGHT] [-X]\n"
 	   "\n"
 	   "Options:\n"
 	   "-o\tOutput file\n"
 	   "-w\tImage width\n"
 	   "-h\tImage height\n"
 	   "-X\tShow window\n",
-	   program, program);
+	   program);
 }
 
 
@@ -218,9 +212,11 @@ int main(int argc, char *argv[])
 {
     int optchar;
     int img_width = 100, img_height = 100;
-    int should_draw_window = 0;
+    int should_draw_window = 0, quit = 0;
     char filename[MAX_FILE_NAME_LENGTH + 1];
     char *image;
+    SDL_Event event;
+    SDL_Surface *screen;
 
     memset(filename, '\0', MAX_FILE_NAME_LENGTH + 1);
 
@@ -257,20 +253,12 @@ int main(int argc, char *argv[])
 	}
     }
 
-    if (!should_draw_window && strlen(filename) == 0) {
-	usage(argv[0]);
-	exit(0);
-    }
-
     image = (char *) memalign(16, img_width*img_height*BYTES_PER_PIXEL);
 
     //Testing...
-    memset(image, '\0', img_width*img_height*BYTES_PER_PIXEL);
+    //memset(image, '\0', img_width*img_height*BYTES_PER_PIXEL);
 
     if (should_draw_window) {
-	SDL_Event event;
-	SDL_Surface *screen;
-	int quit = 0;
 
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
 	    fprintf(stderr, "SDL_Init() ei onnistunut: %s\n", SDL_GetError());
@@ -287,11 +275,17 @@ int main(int argc, char *argv[])
 	    exit(1);
 	}
 	SDL_WM_SetCaption("Fraktaali", NULL);
+    }
 
-	draw_fractal(image, img_width, img_height);
+    draw_fractal(image, img_width, img_height);
 
-	printf("Kuvan koko on %dx%dx%d = %d\n", img_width, img_height, BYTES_PER_PIXEL,
-	       img_width*img_height*BYTES_PER_PIXEL);
+    printf("Kuvan koko on %dx%dx%d = %d\n", img_width, img_height, BYTES_PER_PIXEL,
+           img_width*img_height*BYTES_PER_PIXEL);
+
+    if (strlen(filename) > 0)
+        save_image(image, img_width, img_height, filename);
+
+    if (should_draw_window) {
 
         copy_image(image, img_width, img_height, screen);
 
@@ -299,28 +293,22 @@ int main(int argc, char *argv[])
 	{
 	    switch (event.type)
 	    {
-	    case SDL_QUIT:
-		quit = 1;
-		break;
-	    case SDL_VIDEOEXPOSE:
-                copy_image(image, img_width, img_height, screen);
-		break;
-	    case SDL_KEYDOWN:
-	    case SDL_KEYUP:
-		if (event.key.keysym.sym == SDLK_ESCAPE)
-		    quit = 1;
-		break;
-	    default:
-		break;
+                case SDL_QUIT:
+                    quit = 1;
+                    break;
+                case SDL_VIDEOEXPOSE:
+                    copy_image(image, img_width, img_height, screen);
+                    break;
+                case SDL_KEYDOWN:
+                case SDL_KEYUP:
+                    if (event.key.keysym.sym == SDLK_ESCAPE)
+                        quit = 1;
+                    break;
+                default:
+                    break;
 	    }
 	}
 
-    } else /* No window */ {
-
-	draw_fractal(image, img_width, img_height);
-
-	if (strlen(filename) > 0)
-	    save_image(image, img_width, img_height, filename);
     }
 
     free(image);
