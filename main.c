@@ -67,19 +67,23 @@ inline long long time_between(const struct timeval *begin, const struct timeval 
 }
 
 
-int draw_fractal(char *image, int width, int height)
+int draw_fractal(char *image, int width, int height, int requested_threads)
 {
     int i, work_threads;
     thread_arguments thread_args[MAX_SPU_THREADS];
     pthread_t threads[MAX_SPU_THREADS];
     struct timeval time_threads_started, time_drawing_started, final_time;
 
-    if ((work_threads = spe_cpu_info_get(SPE_COUNT_USABLE_SPES, -1)) < 1){
-	fprintf(stderr, "Ei ole vapaata SPE-ydintä\n");
+    work_threads = spe_cpu_info_get(SPE_COUNT_USABLE_SPES, -1);
+    if (work_threads < 1){
+	fprintf(stderr, "Ei ole vapaata SPE:tä\n");
 	exit(1);
+    } else if (work_threads < requested_threads) {
+        fprintf(stderr, "Ei saatu %d SPE:tä käyttöön, %d säiettä käytössä\n",
+                requested_threads, work_threads);
+    } else if (work_threads > requested_threads) {
+        work_threads = requested_threads;
     }
-
-    if (work_threads > MAX_SPU_THREADS) work_threads = MAX_SPU_THREADS;
 
     gettimeofday(&time_threads_started, NULL);
 
@@ -197,21 +201,23 @@ void usage(const char *program)
 {
     printf("The lightning-fast fractal drawing program :P\n"
 	   "Usage:\n"
-	   "%s [-o FILE] [-w WIDTH] [-h HEIGHT] [-X]\n"
+	   "%s [-?] [-o FILE] [-w WIDTH] [-h HEIGHT] [-n THREADS] [-X]\n"
 	   "\n"
 	   "Options:\n"
+           "-?\tThis help\n"
 	   "-o\tOutput file\n"
 	   "-w\tImage width\n"
 	   "-h\tImage height\n"
+           "-n\tNumber of threads, excluding the main thread (1 - %d)\n"
 	   "-X\tShow window\n",
-	   program);
+	   program, MAX_SPU_THREADS);
 }
 
 
 int main(int argc, char *argv[])
 {
     int optchar;
-    int img_width = 100, img_height = 100;
+    int img_width = 100, img_height = 100, n_threads = 1;
     int should_draw_window = 0, quit = 0;
     char filename[MAX_FILE_NAME_LENGTH + 1];
     char *image;
@@ -220,36 +226,47 @@ int main(int argc, char *argv[])
 
     memset(filename, '\0', MAX_FILE_NAME_LENGTH + 1);
 
-    while ((optchar = getopt(argc, argv, "w:h:o:X")) != -1)
+    while ((optchar = getopt(argc, argv, "?w:h:o:n:X")) != -1)
     {
 	switch (optchar)
 	{
-	case 'w':
-	    img_width = atoi(optarg);
-	    if (img_width <= 0) {
-		usage(argv[0]);
-		exit(2);
-	    }
-	    if (img_width > MAX_IMG_WIDTH)
-		img_width = MAX_IMG_WIDTH;
-	    break;
-	case 'h':
-	    img_height = atoi(optarg);
-	    if (img_height <= 0) {
-		usage(argv[0]);
-		exit(2);
-	    }
-	    if (img_height > MAX_IMG_HEIGHT)
-		img_height = MAX_IMG_HEIGHT;
-	    break;
-	case 'o':
-	    strncpy(filename, optarg, MAX_FILE_NAME_LENGTH);
-	    break;
-	case 'X':
-	    should_draw_window = 1;
-	    break;
-	default:
-	    break;
+            case '?':
+                usage(argv[0]);
+                exit(0);
+                break;
+            case 'w':
+                img_width = atoi(optarg);
+                if (img_width <= 0) {
+                    usage(argv[0]);
+                    exit(2);
+                }
+                if (img_width > MAX_IMG_WIDTH)
+                    img_width = MAX_IMG_WIDTH;
+                break;
+            case 'h':
+                img_height = atoi(optarg);
+                if (img_height <= 0) {
+                    usage(argv[0]);
+                    exit(2);
+                }
+                if (img_height > MAX_IMG_HEIGHT)
+                    img_height = MAX_IMG_HEIGHT;
+                break;
+            case 'o':
+                strncpy(filename, optarg, MAX_FILE_NAME_LENGTH);
+                break;
+            case 'n':
+                n_threads = atoi(optarg);
+                if (n_threads < 1 || n_threads > MAX_SPU_THREADS) {
+                    usage(argv[0]);
+                    exit(2);
+                }
+                break;
+            case 'X':
+                should_draw_window = 1;
+                break;
+            default:
+                break;
 	}
     }
 
@@ -277,7 +294,7 @@ int main(int argc, char *argv[])
 	SDL_WM_SetCaption("Fraktaali", NULL);
     }
 
-    draw_fractal(image, img_width, img_height);
+    draw_fractal(image, img_width, img_height, n_threads);
 
     printf("Kuvan koko on %dx%dx%d = %d\n", img_width, img_height, BYTES_PER_PIXEL,
            img_width*img_height*BYTES_PER_PIXEL);
