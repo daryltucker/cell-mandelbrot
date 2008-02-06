@@ -43,52 +43,52 @@ drawMandelbrotArea:
 
 ## {
 ##   float 
-##        $80  <-- x0,
-##        $81  <-- y0,
-##        $82  <-- x,
-##        $83  <-- y,
-##        $84  <-- xTemp,
-##        $85  <-- yTemp;
+##        $15  <-- x0,
+##        $16  <-- y0,
+##        $17  <-- x,
+##        $18  <-- y,
+##        $19  <-- xTemp,
+##        $20  <-- yTemp;
 ##   float 
-##        $86  <-- scale,
-##        $87  <-- mandSize,
-##        $88  <-- offsetX,
-##        $89  <-- offsetY;
+##        $21  <-- scale,
+##        $22  <-- mandSize,
+##        $23  <-- offsetX,
+##        $24  <-- offsetY;
 ##   unsigned int 
-##        $90  <-- i,
-##        $91  <-- j,
-##        $92  <-- iteration,
-##        $93  <-- color,
-##        $94  <-- maxColor;
+##        $25  <-- i,
+##        $26  <-- j,
+##        $27  <-- iteration,
+##        $28  <-- color,
+##        $29  <-- maxColor;
 ##   signed int 
-##        $95  <-- k;
+##        $30  <-- k;
 ##   char *
-##        $96  <-- line;
+##        $31  <-- line;
 
 ##   mandSize = MANDELBROT_DEFAULT_SIZE / zoom;
-	frest $97, $7		# r97 = 1.0f / r7;
-	fi $97, $7, $97		# tarkennetaan käänteislukua
-	lqr $98, mandelbrot_default_size
-	fm $87, $98, $97		# r87 = r98 * r97
+	frest $32, $7		# r32 = 1.0f / r7;
+	fi $32, $7, $32		# tarkennetaan käänteislukua
+	lqr $33, mandelbrot_default_size
+	fm $22, $33, $32		# r22 = r33 * r32
 
 ##   scale = mandSize / MIN(width, height);
-	cgt $98, $3, $4
+	cgt $33, $3, $4
 	## Tähän varmaan on elegantimpikin ratkaisu...
-	brz $98, width_min
-	## Okei, $98:iin tulee minimi
+	brz $33, width_min
+	## Okei, $33:iin tulee minimi
 height_min:	
-	lr $98, $4
+	lr $33, $4
 	br min_done
 width_min:
-	lr $98, $3
+	lr $33, $3
 min_done:
-	## 1/min $99:iin
-	frest $99, $98
-	fi $99, $98, $99
-	fm $100, $87, $99	## r100 = r87 * r99
+	## 1/min $34:iin
+	frest $34, $33
+	fi $34, $33, $34
+	fm $35, $22, $34	## r35 = r22 * r34
 
 	## Kerrotaan mitä on saatu tähän asti aikaiseksi
-	wrch SPU_WrOutMbox, $100
+	wrch SPU_WrOutMbox, $35
 
 ##   offsetX = mandSize / -2.0 * (width > height ? (float)width/height : 1.0)
 ##             + reOffset;
@@ -96,18 +96,18 @@ min_done:
 ##             + imOffset;
 
 	## Olkoon nyt offsetX ja offsetY 0.0
-	lqr $88, zero 		# Ei tietenkään ila, vaan se arvo pitää ladata
-	lqr $89, zero
+	lqr $23, zero 		# Ei tietenkään ila, vaan se arvo pitää ladata
+	lqr $24, zero
 	
 ##   for (j = areaY;
-	a $101, $13, $11	# Lasketaan (areaHeight + areaY) etukäteen
-	lr $102, $11
+	a $36, $13, $11	# Lasketaan (areaHeight + areaY) etukäteen
+	lr $37, $11
 
 outer_loop:	
 ##  areaHeight + areaY > j; j++)
-	cgt $103, $101, $102
+	cgt $38, $36, $37
 	## tähän vinkki että tod.näk tosi
-	brz $103, finish
+	brz $38, finish
 	
 ##   {
 	## Tässä vois jotain tulostella kokeeksi
@@ -142,7 +142,7 @@ outer_loop:
 ##           (color & ((uint32)0xFF << (8*k))) >> (8*k);
 ##     }
 	
-	ai $102, $102, 1	# j:n kasvatus
+	ai $37, $37, 1	# j:n kasvatus
 ##   }
 finish:	
 ## }
