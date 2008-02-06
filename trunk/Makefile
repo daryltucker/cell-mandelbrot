@@ -48,7 +48,7 @@ mandelbrot.o: mandelbrot.c
 	spu-gcc $(SPU_CC_FLAGS) -c mandelbrot.c -o mandelbrot.o
 
 asm_mandelbrot.o: mandelbrot.s
-	spu-gcc -c mandelbrot.s -o asm_mandelbrot.o
+	spu-gcc $(SPU_CC_FLAGS) -c mandelbrot.s -o asm_mandelbrot.o
 
 ##### YM.
 
