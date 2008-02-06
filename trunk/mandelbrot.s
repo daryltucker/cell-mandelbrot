@@ -10,6 +10,9 @@ mandelbrot_default_size:
 .align 4
 zero:
 	.float 0.0
+.align 4
+lol:	
+	.ascii "lol \0"
 
 .equ LR_OFFSET, 16
 .equ FRAME_SIZE, 32		# Ei pinomuuttujia
@@ -31,9 +34,9 @@ drawMandelbrotArea:
 ## $7    <-- float zoom
 ## $8    <-- uint32 maxIteration
 ## $9    <-- char *areaBuffer
-## $10   <-- uint32 areaX
+## $10   <-- uint32 areaX -- Ei käytetä, arvo 0
 ## $11   <-- uint32 areaY
-## $12   <-- uint32 areaWidth
+## $12   <-- uint32 areaWidth -- Ei käytetä, arvo sama kuin width
 ## $13   <-- uint32 areaHeight
 ## $14   <-- uint32 bytesPerPixel
 ## )
@@ -102,11 +105,14 @@ min_done:
 
 outer_loop:	
 ##  areaHeight + areaY > j; j++)
-	cgt $103, $101 $102
+	cgt $103, $101, $102
 	## tähän vinkki että tod.näk tosi
 	brz $103, finish
 	
 ##   {
+	## Tässä vois jotain tulostella kokeeksi
+	## mutta pitäis panna parametrit talteen ennen aliohjelman kutsua
+
 ##     line = areaBuffer + (width * (j - areaY) * bytesPerPixel);
 ##     for (i = areaX; i < areaWidth + areaX; i++)
 ##     {
@@ -136,7 +142,7 @@ outer_loop:
 ##           (color & ((uint32)0xFF << (8*k))) >> (8*k);
 ##     }
 	
-	ai $102, 1	# j:n kasvatus
+	ai $102, $102, 1	# j:n kasvatus
 ##   }
 finish:	
 ## }
