@@ -7,7 +7,9 @@
 .align 4
 mandelbrot_default_size:	
 	.float, 0f4.0
-	
+.align 4
+zero:
+	.float 0.0
 
 .equ LR_OFFSET, 16
 .equ FRAME_SIZE, 32		# Ei pinomuuttujia
@@ -90,7 +92,20 @@ min_done:
 ##   offsetY = mandSize / -2.0 * (width < height ? (float)height/width : 1.0)
 ##             + imOffset;
 
-##   for (j = areaY; j < areaHeight + areaY; j++)
+	## Olkoon nyt offsetX ja offsetY 0.0
+	lqr $88, zero 		# Ei tietenkään ila, vaan se arvo pitää ladata
+	lqr $89, zero
+	
+##   for (j = areaY;
+	a $101, $13, $11	# Lasketaan (areaHeight + areaY) etukäteen
+	lr $102, $11
+
+outer_loop:	
+##  areaHeight + areaY > j; j++)
+	cgt $103, $101 $102
+	## tähän vinkki että tod.näk tosi
+	brz $103, finish
+	
 ##   {
 ##     line = areaBuffer + (width * (j - areaY) * bytesPerPixel);
 ##     for (i = areaX; i < areaWidth + areaX; i++)
@@ -120,7 +135,10 @@ min_done:
 ##         *(line + bytesPerPixel * (i - areaX) + (bytesPerPixel - k - 1)) =
 ##           (color & ((uint32)0xFF << (8*k))) >> (8*k);
 ##     }
+	
+	ai $102, 1	# j:n kasvatus
 ##   }
+finish:	
 ## }
 	
 	## Epilogi
