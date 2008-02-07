@@ -18,6 +18,8 @@ lol:
 .equ FRAME_SIZE, 32		# Ei pinomuuttujia
 
 
+.text
+
 .global drawMandelbrotArea
 .type drawMandelbrotArea,@function
 drawMandelbrotArea:	
@@ -88,7 +90,7 @@ min_done:
 	fm $35, $22, $34	## r35 = r22 * r34
 
 	## Kerrotaan mitä on saatu tähän asti aikaiseksi
-	wrch SPU_WrOutMbox, $35
+	## wrch SPU_WrOutMbox, $35
 
 ##   offsetX = mandSize / -2.0 * (width > height ? (float)width/height : 1.0)
 ##             + reOffset;
