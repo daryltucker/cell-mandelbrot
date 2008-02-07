@@ -16,11 +16,18 @@ lol:
 .equ FRAME_SIZE, 32		# Ei pinomuuttujia
 .equ BYTES_PER_PIXEL, 4
 
-### Rekistereitä
+###### Rekistereitä
+
+### Argumentit
+.equ SCALE, 21
 .equ IMG_PTR, 31
 
+###  Ym.
+.equ Y_BEGIN, 36
 .equ X_LOOP_COUNTER, 39
 .equ Y_LOOP_COUNTER, 37
+
+### Scratch registers
 .equ TEMP, 75
 .equ TEMP_PTR, 76
 
@@ -94,7 +101,7 @@ min_done:
 	## 1/min $34:iin
 	frest $34, $33
 	fi $34, $33, $34
-	fm $35, $22, $34	## r35 = r22 * r34
+	fm $SCALE, $22, $34	## SCALE = r22 * r34
 
 	## Kerrotaan mitä on saatu tähän asti aikaiseksi
 	## wrch SPU_WrOutMbox, $35
@@ -105,11 +112,11 @@ min_done:
 ##             + imOffset;
 
 	## Olkoon nyt offsetX ja offsetY 0.0
-	lqr $23, zero 		# Ei tietenkään ila, vaan se arvo pitää ladata
+	lqr $23, zero
 	lqr $24, zero
 	
 ##   for (j = areaY;
-	a $36, $13, $11		# Lasketaan (areaHeight + areaY) etukäteen
+	a $Y_BEGIN, $13, $11
 	lr $Y_LOOP_COUNTER, $11
 
 y_loop:	
@@ -126,13 +133,13 @@ y_loop:
 	# line == $31
 	# areaY $11
 	# sitten j - areaY
-	sf $38, $11, $Y_LOOP_COUNTER
-	mpy $38, $3, $38
-	mpyi $38, $38, BYTES_PER_PIXEL
+	sf $TEMP, $11, $Y_LOOP_COUNTER
+	mpy $TEMP, $3, $TEMP
+	mpyi $TEMP, $TEMP, BYTES_PER_PIXEL
 
 	## Tässä on tarkoitus kasvattaa osoittimen arvoa:
 	## LS-osoitin on 32b, eikös...
-	a $IMG_PTR, $9, $38
+	a $IMG_PTR, $9, $TEMP
 
 ##     for (i = 0;
 	il $X_LOOP_COUNTER, 0
@@ -173,9 +180,8 @@ x_loop:
 	## Tilanne:
 	## IMG_PTR --> XXXX|XXXX|XXXX|XXXX || XXXX|XXXX|XXXX|XXXX || ...
 	
-	## *(line + 4 * i + bytesPerPixel)
+	## *(line + 4 * i)
 	mpyi $TEMP, $X_LOOP_COUNTER, BYTES_PER_PIXEL
-	a $TEMP, $TEMP, $BYTES_PER_PIXEL
 	a $TEMP_PTR, $IMG_PTR, $TEMP
 	
 	il $TEMP, 255
