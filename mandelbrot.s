@@ -1,6 +1,4 @@
-### Mandelbrotin fraktaalin piirt‰v‰ funktio
-###
-### T‰ss‰ k‰ytet‰‰n aina float-arvoja double-arvojen sijaan.
+### Mandelbrotin fraktaalin piirt‰v‰ funktio.
 
 .data
 	
@@ -16,6 +14,15 @@ lol:
 
 .equ LR_OFFSET, 16
 .equ FRAME_SIZE, 32		# Ei pinomuuttujia
+.equ BYTES_PER_PIXEL, 4
+
+### Rekistereit‰
+.equ IMG_PTR, 31
+
+.equ X_LOOP_COUNTER, 39
+.equ Y_LOOP_COUNTER, 37
+.equ TEMP, 75
+.equ TEMP_PTR, 76
 
 
 .text
@@ -40,7 +47,7 @@ drawMandelbrotArea:
 ## $11   <-- uint32 areaY
 ## $12   <-- uint32 areaWidth -- Ei k‰ytet‰, arvo sama kuin width
 ## $13   <-- uint32 areaHeight
-## $14   <-- uint32 bytesPerPixel
+## $14   <-- uint32 bytesPerPixel  -- Ei k‰ytet‰, arvo BYTES_PER_PIXEL
 ## )
 
 ## {
@@ -102,21 +109,39 @@ min_done:
 	lqr $24, zero
 	
 ##   for (j = areaY;
-	a $36, $13, $11	# Lasketaan (areaHeight + areaY) etuk‰teen
-	lr $37, $11
+	a $36, $13, $11		# Lasketaan (areaHeight + areaY) etuk‰teen
+	lr $Y_LOOP_COUNTER, $11
 
-outer_loop:	
+y_loop:	
 ##  areaHeight + areaY > j; j++)
-	cgt $38, $36, $37
+	cgt $TEMP, $36, $Y_LOOP_COUNTER
 	## t‰h‰n vinkki ett‰ tod.n‰k tosi
-	brz $38, finish
+	brz $TEMP, finish_y_loop
 	
 ##   {
 	## T‰ss‰ vois jotain tulostella kokeeksi
 	## mutta pit‰is panna parametrit talteen ennen aliohjelman kutsua
 
 ##     line = areaBuffer + (width * (j - areaY) * bytesPerPixel);
-##     for (i = areaX; i < areaWidth + areaX; i++)
+	# line == $31
+	# areaY $11
+	# sitten j - areaY
+	sf $38, $11, $Y_LOOP_COUNTER
+	mpy $38, $3, $38
+	mpyi $38, $38, BYTES_PER_PIXEL
+
+	## T‰ss‰ on tarkoitus kasvattaa osoittimen arvoa:
+	## LS-osoitin on 32b, eikˆs...
+	a $IMG_PTR, $9, $38
+
+##     for (i = 0;
+	il $X_LOOP_COUNTER, 0
+
+x_loop:	
+##     areaWidth > i; i++)
+	cgt $TEMP, $3, $X_LOOP_COUNTER
+	brz $TEMP, finish_x_loop
+
 ##     {
 ##       x0 = i * scale + offsetX;
 ##       y0 = j * scale + offsetY;
@@ -142,11 +167,27 @@ outer_loop:
 ##       for (k = bytesPerPixel - 1; k >= 0; k--)
 ##         *(line + bytesPerPixel * (i - areaX) + (bytesPerPixel - k - 1)) =
 ##           (color & ((uint32)0xFF << (8*k))) >> (8*k);
-##     }
+
+	## T‰h‰n vois nyt aluksi jotain v‰ri‰ tˆhert‰‰
+	##
+	## Tilanne:
+	## IMG_PTR --> XXXX|XXXX|XXXX|XXXX || XXXX|XXXX|XXXX|XXXX || ...
 	
-	ai $37, $37, 1	# j:n kasvatus
+	## *(line + 4 * i + bytesPerPixel)
+	mpyi $TEMP, $X_LOOP_COUNTER, BYTES_PER_PIXEL
+	a $TEMP, $TEMP, $BYTES_PER_PIXEL
+	a $TEMP_PTR, $IMG_PTR, $TEMP
+	
+	il $TEMP, 255
+	stqd $TEMP, 0($TEMP_PTR)
+
+	ai $X_LOOP_COUNTER, $X_LOOP_COUNTER, 1
+##     }
+finish_x_loop:	
+	
+	ai $Y_LOOP_COUNTER, $Y_LOOP_COUNTER, 1
 ##   }
-finish:	
+finish_y_loop:	
 ## }
 	
 	## Epilogi
