@@ -64,4 +64,5 @@ test_mandelbrot.o: test_drawer.c
 ##### YM.
 
 clean:
-	rm -rf *.o c_fractal asm_fractal spu_fractal_drawer spu_asm_fractal_drawer
+	rm -rf *.o c_fractal asm_fractal test_fractal \
+		spu_fractal_drawer spu_asm_fractal_drawer spu_test_fractal_drawer
