@@ -65,9 +65,10 @@ int main(uint64 spe_id, uint64 fractal_parameter_ea)
 
 
     //Piirretään yksi osa kuvasta noin kokeeksi:
-    drawMandelbrotArea( 50, 50,
+    drawMandelbrotArea( parameters.width, parameters.height,
                         0.0f, 0.0f, 1.0f, 100, image_buffer,
-                        0, 0, 50, 50,
+                        parameters.area_x, parameters.area_y,
+                        parameters.area_width, parameters.area_heigth,
                         (uint) parameters.bytes_per_pixel );
 
     /* Kovasti pukkaa varoitusta image_buffer-parametrista, ei auta
