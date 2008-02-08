@@ -4,7 +4,7 @@ SPU_CC_FLAGS=-g -Wall
 LFLAGS=-lpthread -lspe2 -lSDL
 
 
-all: c_fractal asm_fractal
+all: c_fractal asm_fractal test_fractal
 
 
 c_fractal: main.o image.o spu_fractal_drawer_csf.o
@@ -15,6 +15,9 @@ asm_fractal: main.o image.o spu_asm_fractal_drawer_csf.o
 	ppu-gcc $(PPU_CC_FLAGS) -o asm_fractal \
 		spu_asm_fractal_drawer_csf.o image.o main.o $(LFLAGS)
 
+test_fractal: main.o image.o spu_test_fractal_drawer_csf.o
+	ppu-gcc $(PPU_CC_FLAGS) -o test_fractal \
+		spu_test_fractal_drawer_csf.o image.o main.o $(LFLAGS)
 
 ##### PPU-MODULIT
 
@@ -30,6 +33,8 @@ spu_fractal_drawer_csf.o: spu_fractal_drawer
 spu_asm_fractal_drawer_csf.o: spu_asm_fractal_drawer
 	embedspu -m64 fractal_handle spu_asm_fractal_drawer spu_asm_fractal_drawer_csf.o
 
+spu_test_fractal_drawer_csf.o: spu_test_fractal_drawer
+	embedspu -m64 fractal_handle spu_test_fractal_drawer spu_test_fractal_drawer_csf.o
 
 ##### SPU-OHJELMA
 
@@ -38,6 +43,9 @@ spu_fractal_drawer: spu_fractal_driver.o mandelbrot.o
 
 spu_asm_fractal_drawer: spu_fractal_driver.o asm_mandelbrot.o
 	spu-gcc $(SPU_CC_FLAGS) asm_mandelbrot.o spu_fractal_driver.o -o spu_asm_fractal_drawer
+
+spu_test_fractal_drawer: spu_fractal_driver.o test_mandelbrot.o
+	spu-gcc $(SPU_CC_FLAGS) test_mandelbrot.o spu_fractal_driver.o -o spu_test_fractal_drawer
 
 ##### SPU-MODULIT
 
@@ -49,6 +57,9 @@ mandelbrot.o: mandelbrot.c
 
 asm_mandelbrot.o: mandelbrot.s
 	spu-gcc $(SPU_CC_FLAGS) -c mandelbrot.s -o asm_mandelbrot.o
+
+test_mandelbrot.o: test_drawer.c
+	spu-gcc $(SPU_CC_FLAGS) -c test_drawer.c -o test_mandelbrot.o
 
 ##### YM.
 
