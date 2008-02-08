@@ -74,6 +74,7 @@ int draw_fractal(char *image, int width, int height, int requested_threads)
     pthread_t threads[MAX_SPU_THREADS];
     struct timeval time_threads_started, time_drawing_started, final_time;
 
+    assert(requested_threads >= 1);
     work_threads = spe_cpu_info_get(SPE_COUNT_USABLE_SPES, -1);
     if (work_threads < 1){
 	fprintf(stderr, "Ei ole vapaata SPE:tä\n");
