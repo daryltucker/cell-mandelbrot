@@ -114,17 +114,13 @@ min_done:
 	## Olkoon nyt offsetX ja offsetY 0.0
 	lqr $23, zero
 	lqr $24, zero
-	
-##   for (j = areaY;
-	a $Y_BEGIN, $13, $11
-	lr $Y_LOOP_COUNTER, $11
 
-y_loop:	
-##  areaHeight + areaY > j; j++)
-	cgt $TEMP, $36, $Y_LOOP_COUNTER
-	## tähän vinkki että tod.näk tosi
-	brz $TEMP, finish_y_loop
+	## Tätä tarvitaan kohdassa y_loop_test
+	a $Y_BEGIN, $13, $11
 	
+	lr $Y_LOOP_COUNTER, $11
+	br y_loop_test
+y_loop:	
 ##   {
 	## Tässä vois jotain tulostella kokeeksi
 	## mutta pitäis panna parametrit talteen ennen aliohjelman kutsua
@@ -141,14 +137,9 @@ y_loop:
 	## LS-osoitin on 32b, eikös...
 	a $IMG_PTR, $9, $TEMP
 
-##     for (i = 0;
 	il $X_LOOP_COUNTER, 0
-
+	br x_loop_test
 x_loop:	
-##     areaWidth > i; i++)
-	cgt $TEMP, $3, $X_LOOP_COUNTER
-	brz $TEMP, finish_x_loop
-
 ##     {
 ##       x0 = i * scale + offsetX;
 ##       y0 = j * scale + offsetY;
@@ -189,11 +180,17 @@ x_loop:
 
 	ai $X_LOOP_COUNTER, $X_LOOP_COUNTER, 1
 ##     }
-finish_x_loop:	
+x_loop_test:
+	cgt $TEMP, $3, $X_LOOP_COUNTER
+	## tähän vinkki että tod.näk epätosi (?)
+	brnz $TEMP, x_loop
 	
 	ai $Y_LOOP_COUNTER, $Y_LOOP_COUNTER, 1
 ##   }
-finish_y_loop:	
+y_loop_test:	
+	cgt $TEMP, $36, $Y_LOOP_COUNTER
+	## tähän vinkki että tod.näk epätosi
+	brnz $TEMP, y_loop
 ## }
 	
 	## Epilogi
