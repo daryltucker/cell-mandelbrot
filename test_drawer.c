@@ -1,8 +1,6 @@
 /*
  * Testifunktio, joka piirtää yksivärisen kuvan. Tällä näkee että
  * mihin kohti säikeet piirtävät.
- *
- * TODO: Eri värit eri säikeille.
  */ 
 
 #include "fractal.h"
@@ -27,7 +25,7 @@ void drawMandelbrotArea( uint32 width, uint32 height,
     {
       for (k = bytesPerPixel - 1; k >= 0; k--)
         *(line + bytesPerPixel * (i - areaX) + (bytesPerPixel - k - 1)) =
-            0xFF;
+            (char) ((k*my_id) % 0xFF);
             //(color & ((uint32)0xFF << (8*k))) >> (8*k);
     }
   }

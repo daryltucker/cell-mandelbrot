@@ -6,6 +6,8 @@
 
 #define MAX_TRANSFER_SIZE 16384
 
+
+unsigned int my_id;
 char image_buffer[MAX_TRANSFER_SIZE];
 
 
@@ -14,6 +16,9 @@ int main(uint64 spe_id, uint64 fractal_parameter_ea)
     fractal_parameters parameters;
     uint32 message;
 
+    my_id = (unsigned int) spe_id;
+
+    // Odotetaan lähtölupaa
     message = spu_readch(SPU_RdInMbox);
 
     // Ladataan parametrit:
@@ -21,8 +26,8 @@ int main(uint64 spe_id, uint64 fractal_parameter_ea)
     mfc_get(&parameters, fractal_parameter_ea, sizeof(fractal_parameters), 0, 0, 0);
     spu_mfcstat(MFC_TAG_UPDATE_ALL); // Ja odotellaan niitä.
 
-    printf("SPU: area_width: %u, area_height: %u, "
-           "area_x: %u, area_y: %u\n",
+    printf("SPU %u: area_width: %u, area_height: %u, "
+           "area_x: %u, area_y: %u\n", my_id,
 	   parameters.area_width, parameters.area_heigth,
            parameters.area_x, parameters.area_y);
 
