@@ -34,6 +34,7 @@ lol:
 .equ y_begin, 36
 .equ x_loop_counter, 39
 .equ y_loop_counter, 37
+.equ x_temp, 38
 
 ### Scratch registers
 .equ temp, 75
@@ -162,17 +163,25 @@ x_loop:
 
 	lr $x, $x0
 	lr $y, $y0
-	il $iteration, 0
-	br fractal_loop_test
 
 ##       while ( ... )
+	il $iteration, 0
+	br fractal_loop_test
 fractal_loop:
 ##       {
-##         xTemp = x*x - y*y + x0;
-##         yTemp = 2*x*y + y0;
-##         x = xTemp;
-##         y = yTemp;
-##         iteration++;
+	## xTemp = x*x - y*y + x0;
+	## saiskohan tan menee 2:lla kaskylla?
+	fm $temp, $y, $y
+	fma $temp, $x, $x, $temp
+	fa $x_temp, $temp, $x0
+
+	## y = 2*x*y + y0;
+	fm $temp, $x, $y
+	fa $temp, $temp, $temp
+	fa $y, $temp, $y0
+	
+	lr $x, $x_temp
+	ai $iteration, $iteration, 1
 ##       }
 fractal_loop_test:
 	## (MANDELBROT_DEFAULT_SIZE > x*x + y*y && maxIteration > iteration)
