@@ -31,17 +31,18 @@ lol:
 .equ offset_x, 23
 .equ offset_y, 24
 .equ iteration, 27
+.equ max_color, 29
 .equ y_begin, 36
 .equ x_loop_counter, 39
 .equ y_loop_counter, 37
-.equ x_temp, 38
+.equ x_tmp, 38
 
 ### Scratch registers
-.equ temp, 75
-.equ temp_ptr, 76
-.equ temp_cond1, 77
-.equ temp_cond2, 78
-### 79 vapaana
+.equ tmp, 75
+.equ tmp_ptr, 76
+.equ tmp_cond1, 77
+.equ tmp_cond2, 78
+.equ tmp2, 79			# <-- Viimeinen volatile-rekisteri
 
 
 .text
@@ -141,25 +142,25 @@ y_loop:
 	# line == $31
 	# areaY $11
 	# sitten j - areaY
-	sf $temp, $11, $y_loop_counter
-	mpy $temp, $3, $temp
-	mpyi $temp, $temp, BYTES_PER_PIXEL
+	sf $tmp, $11, $y_loop_counter
+	mpy $tmp, $3, $tmp
+	mpyi $tmp, $tmp, BYTES_PER_PIXEL
 
 	## Tässä on tarkoitus kasvattaa osoittimen arvoa:
 	## LS-osoitin on 32b, eikös...
-	a $img_ptr, $9, $temp
+	a $img_ptr, $9, $tmp
 
 	il $x_loop_counter, 0
 	br x_loop_test
 x_loop:	
 ##     {
 ##       x0 = i * scale + offsetX;
-	cuflt $temp, $x_loop_counter, 0 	# $temp = (float) i;
-	fma $x0, $temp, $scale, $offset_x
+	cuflt $tmp, $x_loop_counter, 0 	# $tmp = (float) i;
+	fma $x0, $tmp, $scale, $offset_x
 	
 ##       y0 = j * scale + offsetY;
-	cuflt $temp, $y_loop_counter, 0
-	fma $y0, $temp, $scale, $offset_y
+	cuflt $tmp, $y_loop_counter, 0
+	fma $y0, $tmp, $scale, $offset_y
 
 	lr $x, $x0
 	lr $y, $y0
@@ -171,34 +172,46 @@ fractal_loop:
 ##       {
 	## xTemp = x*x - y*y + x0;
 	## saiskohan tan menee 2:lla kaskylla?
-	fm $temp, $y, $y
-	fma $temp, $x, $x, $temp
-	fa $x_temp, $temp, $x0
+	fm $tmp, $y, $y
+	fma $tmp, $x, $x, $tmp
+	fa $x_tmp, $tmp, $x0
 
 	## y = 2*x*y + y0;
-	fm $temp, $x, $y
-	fa $temp, $temp, $temp
-	fa $y, $temp, $y0
+	fm $tmp, $x, $y
+	fa $tmp, $tmp, $tmp
+	fa $y, $tmp, $y0
 	
-	lr $x, $x_temp
+	lr $x, $x_tmp
 	ai $iteration, $iteration, 1
 ##       }
 fractal_loop_test:
 	## (MANDELBROT_DEFAULT_SIZE > x*x + y*y && maxIteration > iteration)
-	fm $temp, $y, $y
-	fma $temp, $x, $x, $temp
+	## Tassa vois valmiiksi laskea x*x ja y*y seuraavalle iteraatiolle
+	fm $tmp, $y, $y
+	fma $tmp, $x, $x, $tmp
 	lqr $33, mandelbrot_default_size
 	
-	fcgt $temp_cond1, $33, $temp
-	cgt $temp_cond2, $max_iteration, $iteration
+	fcgt $tmp_cond1, $33, $tmp
+	cgt $tmp_cond2, $max_iteration, $iteration
 	## and... ja meitähän kiinnostaa vain ekan sana-alkion bitit
-	and $temp_cond1, $temp_cond1, $temp_cond2
-	brnz $temp_cond1, fractal_loop
+	and $tmp_cond1, $tmp_cond1, $tmp_cond2
+	brnz $tmp_cond1, fractal_loop
 
 ##       maxColor = 0;
 ##       for (k = 0; k < bytesPerPixel; k++)
 ##         maxColor = (maxColor << 8) + 0xFF;
+	orbi $max_color, $max_color, 0xFF
+
+	## Ei ehka tarviis menna floatin kautta
 ##       color = (unsigned int)((float)(iteration)/maxIteration * maxColor);
+	cuflt $tmp, $max_iteration, 0
+	frest $tmp2, $max_iteration
+	fi $tmp, $tmp, $tmp2
+
+	cuflt $tmp2, $iteration, 0
+	fm $tmp, $tmp2, $tmp
+	## Kertaa $max_color...
+
 ##       if (iteration == maxIteration)
 ##         color = 0;
 ##       for (k = bytesPerPixel - 1; k >= 0; k--)
@@ -208,28 +221,30 @@ fractal_loop_test:
 	## Tähän vois nyt aluksi jotain väriä töhertää
 	##
 	## Tilanne:
-	## IMG_PTR --> XXXX|XXXX|XXXX|XXXX || XXXX|XXXX|XXXX|XXXX || ...
+	## img_ptr --> XXXX|XXXX|XXXX|XXXX || XXXX|XXXX|XXXX|XXXX || ...
 	
-	## *(line + 4 * i)
-	mpyi $temp, $x_loop_counter, BYTES_PER_PIXEL
-	a $temp_ptr, $img_ptr, $temp
-	
-	il $temp, 255
-	stqd $temp, 0($temp_ptr)
+	## *($img_ptr + i * BYTES_PER_PIXEL)
+	mpyi $tmp, $x_loop_counter, BYTES_PER_PIXEL
+	a $tmp_ptr, $img_ptr, $tmp
+
+	## Tama ei tayta kaikkia tavuja
+	il $tmp, 255
+	## Tama tallettaa 128b lohkoja
+	stqd $tmp, 0($tmp_ptr)
 
 	ai $x_loop_counter, $x_loop_counter, 1
 ##     }
 x_loop_test:
-	cgt $temp, $3, $x_loop_counter
+	cgt $tmp, $3, $x_loop_counter
 	## tähän vinkki että tod.näk epätosi (?)
-	brnz $temp, x_loop
+	brnz $tmp, x_loop
 	
 	ai $y_loop_counter, $y_loop_counter, 1
 ##   }
 y_loop_test:	
-	cgt $temp, $36, $y_loop_counter
+	cgt $tmp, $36, $y_loop_counter
 	## tähän vinkki että tod.näk epätosi
-	brnz $temp, y_loop
+	brnz $tmp, y_loop
 
 	## Epilogi
 	ai $sp, $sp, FRAME_SIZE
