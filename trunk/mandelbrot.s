@@ -17,28 +17,29 @@ lol:
 .equ BYTES_PER_PIXEL, 4
 
 ###### Rekistereitä
-.equ MAX_ITERATION, $8
+.equ max_iteration, 8
 
 ### Argumentit
 
 ###  Ym.
-.equ X0, 15
-.equ Y0, 16
-.equ X,  17
-.equ Y,  18
-.equ SCALE, 21
-.equ IMG_PTR, 31
-.equ OFFSET_X, 23
-.equ OFFSET_Y, 24
-.equ ITERATION, 27
-.equ Y_BEGIN, 36
-.equ X_LOOP_COUNTER, 39
-.equ Y_LOOP_COUNTER, 37
+.equ x0, 15
+.equ y0, 16
+.equ x,  17
+.equ y,  18
+.equ scale, 21
+.equ img_ptr, 31
+.equ offset_x, 23
+.equ offset_y, 24
+.equ iteration, 27
+.equ y_begin, 36
+.equ x_loop_counter, 39
+.equ y_loop_counter, 37
 
 ### Scratch registers
-.equ TEMP, 75
-.equ TEMP_PTR, 76
-.equ TEMP_COND1, 77
+.equ temp, 75
+.equ temp_ptr, 76
+.equ temp_cond1, 77
+.equ temp_cond2, 78
 ### 79 vapaana
 
 
@@ -111,7 +112,7 @@ min_done:
 	## 1/min $34:iin
 	frest $34, $33
 	fi $34, $33, $34
-	fm $SCALE, $22, $34	## SCALE = r22 * r34
+	fm $scale, $22, $34	## $SCALE = r22 * r34
 
 	## Kerrotaan mitä on saatu tähän asti aikaiseksi
 	## wrch SPU_WrOutMbox, $35
@@ -122,13 +123,13 @@ min_done:
 ##             + imOffset;
 
 	## Olkoon nyt offsetX ja offsetY 0.0
-	lqr $OFFSET_X, zero
-	lqr $OFFSET_Y, zero
+	lqr $offset_x, zero
+	lqr $offset_y, zero
 
 	## Tätä tarvitaan kohdassa y_loop_test
-	a $Y_BEGIN, $13, $11
+	a $y_begin, $13, $11
 	
-	lr $Y_LOOP_COUNTER, $11
+	lr $y_loop_counter, $11
 	br y_loop_test
 y_loop:	
 ##   {
@@ -139,32 +140,33 @@ y_loop:
 	# line == $31
 	# areaY $11
 	# sitten j - areaY
-	sf $TEMP, $11, $Y_LOOP_COUNTER
-	mpy $TEMP, $3, $TEMP
-	mpyi $TEMP, $TEMP, BYTES_PER_PIXEL
+	sf $temp, $11, $y_loop_counter
+	mpy $temp, $3, $temp
+	mpyi $temp, $temp, BYTES_PER_PIXEL
 
 	## Tässä on tarkoitus kasvattaa osoittimen arvoa:
 	## LS-osoitin on 32b, eikös...
-	a $IMG_PTR, $9, $TEMP
+	a $img_ptr, $9, $temp
 
-	il $X_LOOP_COUNTER, 0
+	il $x_loop_counter, 0
 	br x_loop_test
 x_loop:	
 ##     {
 ##       x0 = i * scale + offsetX;
-	cuflt $TEMP, $X_LOOP_COUNTER, 0 	# $TEMP = (float) i;
-	fma $X0, $TEMP, $SCALE, $OFFSET_X
+	cuflt $temp, $x_loop_counter, 0 	# $temp = (float) i;
+	fma $x0, $temp, $scale, $offset_x
 	
 ##       y0 = j * scale + offsetY;
-	cuflt $TEMP, $Y_LOOP_COUNTER, 0
-	fma $Y0, $TEMP, $SCALE, $OFFSET_Y
+	cuflt $temp, $y_loop_counter, 0
+	fma $y0, $temp, $scale, $offset_y
 
-	lr $X, $X0
-	lr $Y, $Y0
-	il $ITERATION, 0
+	lr $x, $x0
+	lr $y, $y0
+	il $iteration, 0
 	br fractal_loop_test
 
-##       while (x*x + y*y < MANDELBROT_DEFAULT_SIZE && iteration < maxIteration)
+##       while ( ... )
+fractal_loop:
 ##       {
 ##         xTemp = x*x - y*y + x0;
 ##         yTemp = 2*x*y + y0;
@@ -174,13 +176,15 @@ x_loop:
 ##       }
 fractal_loop_test:
 	## (MANDELBROT_DEFAULT_SIZE > x*x + y*y && maxIteration > iteration)
-	fm $TEMP, $Y, $Y
-	fma $TEMP, $X, $X, $TEMP
+	fm $temp, $y, $y
+	fma $temp, $x, $x, $temp
 	lqr $33, mandelbrot_default_size
-	fcgt $TEMP_COND1, $33, $TEMP
-
-	cgt $TEMP_COND2, $MAX_ITERATION, $ITERATION
+	
+	fcgt $temp_cond1, $33, $temp
+	cgt $temp_cond2, $max_iteration, $iteration
 	## and... ja meitähän kiinnostaa vain ekan sana-alkion bitit
+	and $temp_cond1, $temp_cond1, $temp_cond2
+	brnz $temp_cond1, fractal_loop
 
 ##       maxColor = 0;
 ##       for (k = 0; k < bytesPerPixel; k++)
@@ -198,28 +202,28 @@ fractal_loop_test:
 	## IMG_PTR --> XXXX|XXXX|XXXX|XXXX || XXXX|XXXX|XXXX|XXXX || ...
 	
 	## *(line + 4 * i)
-	mpyi $TEMP, $X_LOOP_COUNTER, BYTES_PER_PIXEL
-	a $TEMP_PTR, $IMG_PTR, $TEMP
+	mpyi $temp, $x_loop_counter, BYTES_PER_PIXEL
+	a $temp_ptr, $img_ptr, $temp
 	
-	il $TEMP, 255
-	stqd $TEMP, 0($TEMP_PTR)
+	il $temp, 255
+	stqd $temp, 0($temp_ptr)
 
-	ai $X_LOOP_COUNTER, $X_LOOP_COUNTER, 1
+	ai $x_loop_counter, $x_loop_counter, 1
 ##     }
 x_loop_test:
-	cgt $TEMP, $3, $X_LOOP_COUNTER
+	cgt $temp, $3, $x_loop_counter
 	## tähän vinkki että tod.näk epätosi (?)
-	brnz $TEMP, x_loop
+	brnz $temp, x_loop
 	
-	ai $Y_LOOP_COUNTER, $Y_LOOP_COUNTER, 1
+	ai $y_loop_counter, $y_loop_counter, 1
 ##   }
 y_loop_test:	
-	cgt $TEMP, $36, $Y_LOOP_COUNTER
+	cgt $temp, $36, $y_loop_counter
 	## tähän vinkki että tod.näk epätosi
-	brnz $TEMP, y_loop
-## }
-	
+	brnz $temp, y_loop
+
 	## Epilogi
 	ai $sp, $sp, FRAME_SIZE
 	lqd $lr, LR_OFFSET($sp)
 	bi $lr
+## }
