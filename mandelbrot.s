@@ -17,12 +17,20 @@ lol:
 .equ BYTES_PER_PIXEL, 4
 
 ###### Rekistereitä
+.equ MAX_ITERATION, $8
 
 ### Argumentit
-.equ SCALE, 21
-.equ IMG_PTR, 31
 
 ###  Ym.
+.equ X0, 15
+.equ Y0, 16
+.equ X,  17
+.equ Y,  18
+.equ SCALE, 21
+.equ IMG_PTR, 31
+.equ OFFSET_X, 23
+.equ OFFSET_Y, 24
+.equ ITERATION, 27
 .equ Y_BEGIN, 36
 .equ X_LOOP_COUNTER, 39
 .equ Y_LOOP_COUNTER, 37
@@ -30,6 +38,8 @@ lol:
 ### Scratch registers
 .equ TEMP, 75
 .equ TEMP_PTR, 76
+.equ TEMP_COND1, 77
+### 79 vapaana
 
 
 .text
@@ -112,8 +122,8 @@ min_done:
 ##             + imOffset;
 
 	## Olkoon nyt offsetX ja offsetY 0.0
-	lqr $23, zero
-	lqr $24, zero
+	lqr $OFFSET_X, zero
+	lqr $OFFSET_Y, zero
 
 	## Tätä tarvitaan kohdassa y_loop_test
 	a $Y_BEGIN, $13, $11
@@ -142,10 +152,17 @@ y_loop:
 x_loop:	
 ##     {
 ##       x0 = i * scale + offsetX;
+	cuflt $TEMP, $X_LOOP_COUNTER, 0 	# $TEMP = (float) i;
+	fma $X0, $TEMP, $SCALE, $OFFSET_X
+	
 ##       y0 = j * scale + offsetY;
-##       x = x0;
-##       y = y0;
-##       iteration = 0;
+	cuflt $TEMP, $Y_LOOP_COUNTER, 0
+	fma $Y0, $TEMP, $SCALE, $OFFSET_Y
+
+	lr $X, $X0
+	lr $Y, $Y0
+	il $ITERATION, 0
+	br fractal_loop_test
 
 ##       while (x*x + y*y < MANDELBROT_DEFAULT_SIZE && iteration < maxIteration)
 ##       {
@@ -155,6 +172,15 @@ x_loop:
 ##         y = yTemp;
 ##         iteration++;
 ##       }
+fractal_loop_test:
+	## (MANDELBROT_DEFAULT_SIZE > x*x + y*y && maxIteration > iteration)
+	fm $TEMP, $Y, $Y
+	fma $TEMP, $X, $X, $TEMP
+	lqr $33, mandelbrot_default_size
+	fcgt $TEMP_COND1, $33, $TEMP
+
+	cgt $TEMP_COND2, $MAX_ITERATION, $ITERATION
+	## and... ja meitähän kiinnostaa vain ekan sana-alkion bitit
 
 ##       maxColor = 0;
 ##       for (k = 0; k < bytesPerPixel; k++)
