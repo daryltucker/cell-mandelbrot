@@ -16,10 +16,21 @@ lol:
 .equ FRAME_SIZE, 32		# Ei pinomuuttujia
 .equ BYTES_PER_PIXEL, 4
 
-###### Rekistereitä
-.equ max_iteration, 8
+###### Rekistereita
 
 ### Argumentit
+.equ width, 3
+.equ height, 4
+.equ re_offset, 5
+.equ im_offset, 6
+.equ zoom, 7
+.equ max_iteration, 8
+.equ area_buffer, 9
+#.equ area_x, 10		# Ei käytetä, arvo 0
+.equ area_y, 11
+#.equ area_width, 12		# Ei käytetä, arvo sama kuin width
+.equ area_height, 13
+#.equ bytes_per_pixel, 14	# Ei käytetä, arvo BYTES_PER_PIXEL
 
 ###  Ym.
 .equ x0, 15
@@ -54,22 +65,6 @@ drawMandelbrotArea:
 	stqd $lr, LR_OFFSET($sp)
 	stqd $sp, FRAME_SIZE($sp)
 	ai $sp, $sp, -FRAME_SIZE
-
-## void drawMandelbrotArea(
-## $3    <-- uint32 width
-## $4    <-- uint32 height
-## $5    <-- float reOffset
-## $6    <-- float imOffset
-## $7    <-- float zoom
-## $8    <-- uint32 maxIteration
-## $9    <-- char *areaBuffer
-## $10   <-- uint32 areaX -- Ei käytetä, arvo 0
-## $11   <-- uint32 areaY
-## $12   <-- uint32 areaWidth -- Ei käytetä, arvo sama kuin width
-## $13   <-- uint32 areaHeight
-## $14   <-- uint32 bytesPerPixel  -- Ei käytetä, arvo BYTES_PER_PIXEL
-## )
-
 ## {
 ##   float 
 ##        $15  <-- x0,
@@ -101,15 +96,15 @@ drawMandelbrotArea:
 	fm $22, $33, $32		# r22 = r33 * r32
 
 ##   scale = mandSize / MIN(width, height);
-	cgt $33, $3, $4
+	cgt $33, $width, $height
 	## Tähän varmaan on elegantimpikin ratkaisu...
 	brz $33, width_min
 	## Okei, $33:iin tulee minimi
 height_min:	
-	lr $33, $4
+	lr $33, $height
 	br min_done
 width_min:
-	lr $33, $3
+	lr $33, $width
 min_done:
 	## 1/min $34:iin
 	frest $34, $33
@@ -124,14 +119,19 @@ min_done:
 ##   offsetY = mandSize / -2.0 * (width < height ? (float)height/width : 1.0)
 ##             + imOffset;
 
+### Joitain alustuksia
+	orbi $max_color, $max_color, 0xFF
+	cuflt $max_color, $max_color, 0
+
 	## Olkoon nyt offsetX ja offsetY 0.0
 	lqr $offset_x, zero
 	lqr $offset_y, zero
 
 	## Tätä tarvitaan kohdassa y_loop_test
-	a $y_begin, $13, $11
-	
-	lr $y_loop_counter, $11
+	a $y_begin, $area_height, $area_y
+
+### Ryhdytaan kaymaan kuvaa lapi
+	lr $y_loop_counter, $area_y
 	br y_loop_test
 y_loop:	
 ##   {
@@ -139,16 +139,13 @@ y_loop:
 	## mutta pitäis panna parametrit talteen ennen aliohjelman kutsua
 
 ##     line = areaBuffer + (width * (j - areaY) * bytesPerPixel);
-	# line == $31
-	# areaY $11
-	# sitten j - areaY
-	sf $tmp, $11, $y_loop_counter
-	mpy $tmp, $3, $tmp
+	sf $tmp, $area_y, $y_loop_counter # $tmp = $y_loop_counter - $area_y
+	mpy $tmp, $width, $tmp
 	mpyi $tmp, $tmp, BYTES_PER_PIXEL
 
 	## Tässä on tarkoitus kasvattaa osoittimen arvoa:
 	## LS-osoitin on 32b, eikös...
-	a $img_ptr, $9, $tmp
+	a $img_ptr, $area_buffer, $tmp
 
 	il $x_loop_counter, 0
 	br x_loop_test
@@ -197,20 +194,15 @@ fractal_loop_test:
 	and $tmp_cond1, $tmp_cond1, $tmp_cond2
 	brnz $tmp_cond1, fractal_loop
 
-##       maxColor = 0;
-##       for (k = 0; k < bytesPerPixel; k++)
-##         maxColor = (maxColor << 8) + 0xFF;
-	orbi $max_color, $max_color, 0xFF
-
-	## Ei ehka tarviis menna floatin kautta
+	## Ei ehka tarviis menna floatin kautta, emt.
 ##       color = (unsigned int)((float)(iteration)/maxIteration * maxColor);
 	cuflt $tmp, $max_iteration, 0
 	frest $tmp2, $max_iteration
 	fi $tmp, $tmp, $tmp2
-
 	cuflt $tmp2, $iteration, 0
+	
 	fm $tmp, $tmp2, $tmp
-	## Kertaa $max_color...
+	fm $tmp, $tmp, $max_color
 
 ##       if (iteration == maxIteration)
 ##         color = 0;
@@ -235,7 +227,7 @@ fractal_loop_test:
 	ai $x_loop_counter, $x_loop_counter, 1
 ##     }
 x_loop_test:
-	cgt $tmp, $3, $x_loop_counter
+	cgt $tmp, $width, $x_loop_counter
 	## tähän vinkki että tod.näk epätosi (?)
 	brnz $tmp, x_loop
 	
