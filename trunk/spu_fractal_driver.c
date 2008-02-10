@@ -13,7 +13,7 @@ char image_buffer[MAX_TRANSFER_SIZE];
 
 int main(uint64 spe_id, uint64 fractal_parameter_ea)
 {
-    fractal_parameters parameters;
+    fractal_parameters p;
     uint32 message;
 
     my_id = (unsigned int) spe_id;
@@ -23,13 +23,13 @@ int main(uint64 spe_id, uint64 fractal_parameter_ea)
 
     // Ladataan parametrit:
     mfc_write_tag_mask(1<<0);  //DMA-tunniste = 0
-    mfc_get(&parameters, fractal_parameter_ea, sizeof(fractal_parameters), 0, 0, 0);
+    mfc_get(&p, fractal_parameter_ea, sizeof(fractal_parameters), 0, 0, 0);
     spu_mfcstat(MFC_TAG_UPDATE_ALL); // Ja odotellaan niitä.
 
     printf("SPU %u: area_width: %u, area_height: %u, "
            "area_x: %u, area_y: %u\n", my_id,
-	   parameters.area_width, parameters.area_heigth,
-           parameters.area_x, parameters.area_y);
+	   p.area_width, p.area_heigth,
+           p.area_x, p.area_y);
 
     /*
      * TJ:
@@ -65,20 +65,21 @@ int main(uint64 spe_id, uint64 fractal_parameter_ea)
 
 
     //Piirretään yksi osa kuvasta noin kokeeksi:
-    drawMandelbrotArea( parameters.width, parameters.height,
+    drawMandelbrotArea( p.width, p.height,
                         0.0f, 0.0f, 1.0f, 100, image_buffer,
-                        parameters.area_x, parameters.area_y,
-                        parameters.area_width, parameters.area_heigth,
-                        (uint) parameters.bytes_per_pixel );
+                        p.area_x, p.area_y,
+                        p.area_width, p.area_heigth,
+                        (uint) p.bytes_per_pixel );
 
-    /* Kovasti pukkaa varoitusta image_buffer-parametrista, ei auta
-     * vaikka castaa void*:ksi.
-     */
-    mfc_put(image_buffer,
-	    parameters.image,
-	    //parameters.width*parameters.height*parameters.bytes_per_pixel,
-	    MAX_TRANSFER_SIZE,
-	    0, 0, 0);
+    uint32 my_area = p.area_width*p.area_heigth*p.bytes_per_pixel;
+
+    /* Huom! tassa oletetaan etta oma osa kuvasta on koko kuvan
+     * levyinen.
+     */ 
+    mfc_put( image_buffer,
+             p.image + p.area_y*p.width*p.bytes_per_pixel,
+             MIN(my_area, MAX_TRANSFER_SIZE),
+             0, 0, 0 );
 
     // Odotellaan kaikki siirrot valmiiksi, varmuuden vuoksi.
     spu_mfcstat(MFC_TAG_UPDATE_ALL);

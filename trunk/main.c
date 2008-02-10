@@ -93,6 +93,10 @@ int draw_fractal(char *image, int width, int height, int requested_threads)
     assert(slice_height <= last_slice_height);
     assert(last_slice_height - slice_height <= work_threads);
 
+    /* Tulee Bus error kun width = height = 150 ja saikeita on 6!!!
+     * Varmaan yritetaan kirjoittaa samalle muistialueelle!!!
+     * Meneekohan vikan saikeen area oikein??!!??
+     */ 
     for (i=0; i<work_threads; i++)
     {
 	fractal_parameters *f = &thread_args[i].parameters;
