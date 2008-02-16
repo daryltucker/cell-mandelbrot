@@ -42,7 +42,7 @@ lol:
 .equ offset_x, 23
 .equ offset_y, 24
 .equ iteration, 27
-#.equ color, 28
+.equ color, 28
 .equ max_color, 29
 .equ img_ptr, 31
 .equ y_begin, 36
@@ -181,9 +181,17 @@ fractal_loop_test:
 	
 	fm $tmp, $tmp2, $tmp
 	fm $tmp, $tmp, $max_color
+	cfltu $color, $tmp, 0
 
 ##       if (iteration == maxIteration)
 ##         color = 0;
+	ceq $tmp_cond1, $iteration, $max_iteration
+	## sana-alkiossa 0 on 111...1 jos tosi
+	## muuten 000...0
+	il $tmp, 0
+	## $color-rekisterin ekaan sana-alkioon valitaan joko color tai 0
+	selb $color, $color, $tmp, $tmp_cond1
+
 ##       for (k = bytesPerPixel - 1; k >= 0; k--)
 ##         *(line + bytesPerPixel * (i - areaX) + (bytesPerPixel - k - 1)) =
 ##           (color & ((uint32)0xFF << (8*k))) >> (8*k);
@@ -197,10 +205,11 @@ fractal_loop_test:
 	mpyi $tmp, $x_loop_counter, BYTES_PER_PIXEL
 	a $tmp_ptr, $img_ptr, $tmp
 
-	## Tama ei tayta kaikkia tavuja
-	il $tmp, 255
-	## Tama tallettaa 128b lohkoja
-	stqd $tmp, 0($tmp_ptr)
+	## Tama tallettaa 16 tavun lohkoja.
+	## Pitäis kattoo muistista 16 tavun lohko,
+	## pyöräyttää nelisana siihen oikealle paikalle,
+	## ja viedä lopputulos muistiin.
+	stqd $color, 0($tmp_ptr)
 
 	ai $x_loop_counter, $x_loop_counter, 1
 ##     }
