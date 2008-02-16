@@ -38,15 +38,17 @@ lol:
 .equ x,  17
 .equ y,  18
 .equ scale, 21
-.equ img_ptr, 31
+.equ mand_size, 22
 .equ offset_x, 23
 .equ offset_y, 24
 .equ iteration, 27
+#.equ color, 28
 .equ max_color, 29
+.equ img_ptr, 31
 .equ y_begin, 36
-.equ x_loop_counter, 39
 .equ y_loop_counter, 37
 .equ x_tmp, 38
+.equ x_loop_counter, 39
 
 ### Scratch registers
 .equ tmp, 75
@@ -65,51 +67,27 @@ drawMandelbrotArea:
 	stqd $lr, LR_OFFSET($sp)
 	stqd $sp, FRAME_SIZE($sp)
 	ai $sp, $sp, -FRAME_SIZE
-## {
-##   float 
-##        $15  <-- x0,
-##        $16  <-- y0,
-##        $17  <-- x,
-##        $18  <-- y,
-##        $19  <-- xTemp,
-##        $20  <-- yTemp;
-##   float 
-##        $21  <-- scale,
-##        $22  <-- mandSize,
-##        $23  <-- offsetX,
-##        $24  <-- offsetY;
-##   unsigned int 
-##        $25  <-- i,
-##        $26  <-- j,
-##        $27  <-- iteration,
-##        $28  <-- color,
-##        $29  <-- maxColor;
-##   signed int 
-##        $30  <-- k;
-##   char *
-##        $31  <-- line;
 
 ##   mandSize = MANDELBROT_DEFAULT_SIZE / zoom;
-	frest $32, $7		# r32 = 1.0f / r7;
-	fi $32, $7, $32		# tarkennetaan käänteislukua
-	lqr $33, mandelbrot_default_size
-	fm $22, $33, $32		# r22 = r33 * r32
+	frest $tmp, $zoom		# $tmp = 1.0f / $zoom;
+	fi $tmp, $zoom, $tmp		# tarkennetaan käänteislukua
+	lqr $tmp2, mandelbrot_default_size
+	fm $mand_size, $tmp2, $tmp
 
 ##   scale = mandSize / MIN(width, height);
-	cgt $33, $width, $height
+	cgt $tmp_cond1, $width, $height
 	## Tähän varmaan on elegantimpikin ratkaisu...
-	brz $33, width_min
-	## Okei, $33:iin tulee minimi
+	brz $tmp_cond1, width_min
 height_min:	
-	lr $33, $height
+	lr $tmp, $height
 	br min_done
 width_min:
-	lr $33, $width
+	lr $tmp, $width
 min_done:
-	## 1/min $34:iin
-	frest $34, $33
-	fi $34, $33, $34
-	fm $scale, $22, $34	## $SCALE = r22 * r34
+	## 1/min $tmp2:iin
+	frest $tmp2, $tmp
+	fi $tmp2, $tmp, $tmp2
+	fm $scale, $mand_size, $tmp2
 
 	## Kerrotaan mitä on saatu tähän asti aikaiseksi
 	## wrch SPU_WrOutMbox, $35
