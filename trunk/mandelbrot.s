@@ -8,9 +8,7 @@ mandelbrot_default_size:
 .align 4
 zero:
 	.float 0.0
-.align 4
-lol:	
-	.ascii "lol \0"
+
 
 .equ LR_OFFSET, 16
 .equ FRAME_SIZE, 32		# Ei pinomuuttujia
@@ -162,11 +160,10 @@ fractal_loop_test:
 	## Tassa vois valmiiksi laskea x*x ja y*y seuraavalle iteraatiolle
 	fm $tmp, $y, $y
 	fma $tmp, $x, $x, $tmp
-	lqr $33, mandelbrot_default_size
-	
-	fcgt $tmp_cond1, $33, $tmp
+	lqr $tmp2, mandelbrot_default_size
+	fcgt $tmp_cond1, $tmp2, $tmp
 	cgt $tmp_cond2, $max_iteration, $iteration
-	## and... ja meitähän kiinnostaa vain ekan sana-alkion bitit
+	
 	and $tmp_cond1, $tmp_cond1, $tmp_cond2
 	brnz $tmp_cond1, fractal_loop
 
@@ -189,6 +186,13 @@ fractal_loop_test:
 	il $tmp, 0
 	## $color-rekisterin ekaan sana-alkioon valitaan joko color tai 0
 	selb $color, $color, $tmp, $tmp_cond1
+
+	## Maalataan kokeeksi punaista
+	il $color, 0xFF
+	shli $color, $color, 16
+
+	## Tai jotain muuta
+	# lr $color, $iteration
 
 	## Tilanne:
 	## line_ptr --> XXXX|XXXX|XXXX|XXXX || XXXX|XXXX|XXXX|XXXX || ...
@@ -215,7 +219,7 @@ x_loop_test:
 	ai $y_loop_counter, $y_loop_counter, 1
 	
 y_loop_test:	
-	cgt $tmp, $36, $y_loop_counter
+	cgt $tmp, $y_begin, $y_loop_counter
 	## tähän vinkki että tod.näk epätosi
 	brnz $tmp, y_loop
 
