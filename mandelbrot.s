@@ -44,11 +44,12 @@ lol:
 .equ iteration, 27
 .equ color, 28
 .equ max_color, 29
-.equ img_ptr, 31
+.equ line_ptr, 31
 .equ y_begin, 36
 .equ y_loop_counter, 37
 .equ x_tmp, 38
 .equ x_loop_counter, 39
+.equ word_insertion_mask, 40
 
 ### Scratch registers
 .equ tmp, 75
@@ -112,7 +113,6 @@ min_done:
 	lr $y_loop_counter, $area_y
 	br y_loop_test
 y_loop:	
-##   {
 	## Tässä vois jotain tulostella kokeeksi
 	## mutta pitäis panna parametrit talteen ennen aliohjelman kutsua
 
@@ -123,12 +123,11 @@ y_loop:
 
 	## Tässä on tarkoitus kasvattaa osoittimen arvoa:
 	## LS-osoitin on 32b, eikös...
-	a $img_ptr, $area_buffer, $tmp
+	a $line_ptr, $area_buffer, $tmp
 
 	il $x_loop_counter, 0
 	br x_loop_test
 x_loop:	
-##     {
 ##       x0 = i * scale + offsetX;
 	cuflt $tmp, $x_loop_counter, 0 	# $tmp = (float) i;
 	fma $x0, $tmp, $scale, $offset_x
@@ -144,7 +143,6 @@ x_loop:
 	il $iteration, 0
 	br fractal_loop_test
 fractal_loop:
-##       {
 	## xTemp = x*x - y*y + x0;
 	## saiskohan tan menee 2:lla kaskylla?
 	fm $tmp, $y, $y
@@ -158,7 +156,7 @@ fractal_loop:
 	
 	lr $x, $x_tmp
 	ai $iteration, $iteration, 1
-##       }
+
 fractal_loop_test:
 	## (MANDELBROT_DEFAULT_SIZE > x*x + y*y && maxIteration > iteration)
 	## Tassa vois valmiiksi laskea x*x ja y*y seuraavalle iteraatiolle
@@ -192,34 +190,30 @@ fractal_loop_test:
 	## $color-rekisterin ekaan sana-alkioon valitaan joko color tai 0
 	selb $color, $color, $tmp, $tmp_cond1
 
-##       for (k = bytesPerPixel - 1; k >= 0; k--)
-##         *(line + bytesPerPixel * (i - areaX) + (bytesPerPixel - k - 1)) =
-##           (color & ((uint32)0xFF << (8*k))) >> (8*k);
-
-	## Tähän vois nyt aluksi jotain väriä töhertää
-	##
 	## Tilanne:
-	## img_ptr --> XXXX|XXXX|XXXX|XXXX || XXXX|XXXX|XXXX|XXXX || ...
+	## line_ptr --> XXXX|XXXX|XXXX|XXXX || XXXX|XXXX|XXXX|XXXX || ...
 	
-	## *($img_ptr + i * BYTES_PER_PIXEL)
+	## *($line_ptr + i * BYTES_PER_PIXEL)
 	mpyi $tmp, $x_loop_counter, BYTES_PER_PIXEL
-	a $tmp_ptr, $img_ptr, $tmp
+	a $tmp_ptr, $line_ptr, $tmp
 
-	## Tama tallettaa 16 tavun lohkoja.
-	## Pitäis kattoo muistista 16 tavun lohko,
-	## pyöräyttää nelisana siihen oikealle paikalle,
-	## ja viedä lopputulos muistiin.
-	stqd $color, 0($tmp_ptr)
+	## Asetetaan sana-alkio oikeaan kohtaan 16 tavun
+	## lohkoa muistiin viemistÃ¤ varte.
+	lqd $tmp, 0($tmp_ptr)
+	cwd $word_insertion_mask, 0($tmp_ptr)
+	shufb $tmp, $color, $tmp, $word_insertion_mask
+
+	stqd $tmp, 0($tmp_ptr)
 
 	ai $x_loop_counter, $x_loop_counter, 1
-##     }
+	
 x_loop_test:
 	cgt $tmp, $width, $x_loop_counter
 	## tähän vinkki että tod.näk epätosi (?)
 	brnz $tmp, x_loop
 	
 	ai $y_loop_counter, $y_loop_counter, 1
-##   }
+	
 y_loop_test:	
 	cgt $tmp, $36, $y_loop_counter
 	## tähän vinkki että tod.näk epätosi
@@ -229,4 +223,3 @@ y_loop_test:
 	ai $sp, $sp, FRAME_SIZE
 	lqd $lr, LR_OFFSET($sp)
 	bi $lr
-## }
