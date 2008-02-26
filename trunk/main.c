@@ -27,6 +27,8 @@
 #define BITS_PER_PIXEL (BYTES_PER_PIXEL * 8)
 #define MAX_IMG_WIDTH 3000
 #define MAX_IMG_HEIGHT 3000
+#define ZOOM_STEP 0.1f
+#define MOVE_STEP 0.05f
 
 #define MEGA 1000000
 
@@ -67,7 +69,7 @@ inline long long time_between(const struct timeval *begin, const struct timeval 
 }
 
 
-int draw_fractal(char *image, int width, int height, int requested_threads)
+int draw_fractal(char *image, int width, int height, int requested_threads, float zoom, float re_offset, float im_offset)
 {
     int i, work_threads;
     thread_arguments thread_args[MAX_SPU_THREADS];
@@ -96,7 +98,7 @@ int draw_fractal(char *image, int width, int height, int requested_threads)
     /* Tulee Bus error kun width = height = 150 ja saikeita on 6!!!
      * Varmaan yritetaan kirjoittaa samalle muistialueelle!!!
      * Meneekohan vikan saikeen area oikein??!!??
-     */ 
+     */
     for (i=0; i<work_threads; i++)
     {
 	fractal_parameters *f = &thread_args[i].parameters;
@@ -104,9 +106,9 @@ int draw_fractal(char *image, int width, int height, int requested_threads)
 	f->image         = (uint64) image;
 	f->width         = (uint) width;
 	f->height        = (uint) height;
-	f->re_offset     = 0.0f;
-	f->im_offset     = 0.0f;
-	f->zoom          = 1.0f;
+	f->re_offset     = re_offset;
+	f->im_offset     = im_offset;
+	f->zoom          = zoom;
 	f->max_iteration = 100;
 	f->area_x        = 0;
 	f->area_y        = 0 + i*slice_height;
@@ -223,6 +225,7 @@ int main(int argc, char *argv[])
 {
     int optchar;
     int img_width = 100, img_height = 100, n_threads = 1;
+    float zoom = 0.1f, re_offset = 0.0f, im_offset = 0.0f;
     int should_draw_window = 0, quit = 0;
     char filename[MAX_FILE_NAME_LENGTH + 1];
     char *image;
@@ -299,7 +302,7 @@ int main(int argc, char *argv[])
 	SDL_WM_SetCaption("Fraktaali", NULL);
     }
 
-    draw_fractal(image, img_width, img_height, n_threads);
+    draw_fractal(image, img_width, img_height, n_threads, zoom, re_offset, im_offset);
 
     printf("Kuvan koko on %dx%dx%d = %d\n", img_width, img_height, BYTES_PER_PIXEL,
            img_width*img_height*BYTES_PER_PIXEL);
@@ -323,8 +326,26 @@ int main(int argc, char *argv[])
                     break;
                 case SDL_KEYDOWN:
                 case SDL_KEYUP:
+
                     if (event.key.keysym.sym == SDLK_ESCAPE)
                         quit = 1;
+                    else if (event.key.keysym.sym == SDLK_PLUS || event.key.keysym.sym == SDLK_KP_PLUS)
+                        zoom += ZOOM_STEP;
+                    else if ((event.key.keysym.sym == SDLK_MINUS || event.key.keysym.sym == SDLK_KP_MINUS) && (zoom - ZOOM_STEP >= 0))
+                        zoom -= ZOOM_STEP;
+                    else if (event.key.keysym.sym == SDLK_UP)
+                        im_offset += MOVE_STEP;
+                    else if (event.key.keysym.sym == SDLK_DOWN)
+                        im_offset -= MOVE_STEP;
+                    else if (event.key.keysym.sym == SDLK_LEFT)
+                        re_offset += MOVE_STEP;
+                    else if (event.key.keysym.sym == SDLK_RIGHT)
+                        re_offset -= MOVE_STEP;
+                    else
+                        break;
+                    draw_fractal(image, img_width, img_height, n_threads, zoom, re_offset, im_offset);
+                    copy_image(image, img_width, img_height, screen);
+
                     break;
                 default:
                     break;

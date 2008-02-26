@@ -26,62 +26,46 @@ int main(uint64 spe_id, uint64 fractal_parameter_ea)
     mfc_get(&p, fractal_parameter_ea, sizeof(fractal_parameters), 0, 0, 0);
     spu_mfcstat(MFC_TAG_UPDATE_ALL); // Ja odotellaan niit‰.
 
+    // Make sure that one horizontal slice isn't greater that the MFC limit.
+    if (p.area_width*p.bytes_per_pixel > MAX_TRANSFER_SIZE) 
+    {
+      printf("SPU %u failed, because horizontal size is too large (%u).", 
+             my_id, p.area_width);
+      return -1;
+    }
+
+    // Calculate how many rows it's possible to copy at once.
+    uint32 h_slice_size = MAX_TRANSFER_SIZE / (p.area_width*p.bytes_per_pixel);
+    if (h_slice_size > p.area_heigth)
+      h_slice_size = p.area_heigth;
+
     printf("SPU %u: area_width: %u, area_height: %u, "
-           "area_x: %u, area_y: %u\n", my_id,
-	   p.area_width, p.area_heigth,
-           p.area_x, p.area_y);
+           "area_x: %u, area_y: %u, horizontal slices: %u\n", my_id,
+           p.area_width, p.area_heigth,
+           p.area_x, p.area_y,
+           p.area_heigth / h_slice_size);
 
-    /*
-     * TJ:
-     * 
-     * Jos oma siivu ei sovi puskuriin, niin piirret‰‰n kerrallaan
-     * niin paljon kuin sopii, ja siirret‰‰n piirretty osuus
-     * p‰‰muistiin.
-     *
-     * Tietty ongelman voisi myˆs hoitaa PPU:sta k‰sin, s‰ikeiden
-     * kanssa vekslaamalla. Mutta varmaan olis tehokkaampi jos vain
-     * yksi s‰ie hoitaa kokonaan oman osuutensa niin ei tule turhia
-     * s‰ikeiden k‰ynnistyksi‰. Ja p‰‰ohjelmassa jaettaisiin kuva niin
-     * moneen osaan kuin on s‰ikeit‰.
-     *
-     * Tulipa mieleen ett‰ voisiko t‰ss‰ olla jonkinmoinen
-     * kaksoispuskurointi?  Eli onkin kaksi puolet pienemp‰‰ image
-     * bufferia. Kun toinen on pistetty menem‰‰n p‰‰muistiin niin
-     * toiseen ruvettais heti piirt‰m‰‰n. Luulisi ett‰ se olisi
-     * yksinkertainen ja tehokas ratkaisu. Tietysti edelleen pit‰‰
-     * olla tarkistus ett‰ joko puskuri on kopioitu p‰‰muistiin.
-     *
-     * Ja eri puskurien siirroilla pit‰is olla oma tagi, ett‰
-     * tiedet‰‰n odottaa oikeeta siirtoa.
-     */
+    uint32 y = 0;
+    for (y = 0; y < p.area_heigth; y += h_slice_size)
+    {
+      uint32 height = h_slice_size;      
+      if (height > p.area_heigth - y) 
+        height = p.area_heigth - y;
 
-    // LOOP:
+      drawMandelbrotArea( p.width, p.height,
+                          p.re_offset, p.im_offset, p.zoom, 
+                          p.max_iteration, image_buffer,
+                          p.area_x, p.area_y + y,
+                          p.area_width, height,
+                          (uint) p.bytes_per_pixel );
 
-    //     Odotellaan edellinen siirto valmiiksi
+      mfc_put( image_buffer,
+               p.image + (p.area_y*p.width + y*p.area_width)*p.bytes_per_pixel,
+	       p.area_width*p.bytes_per_pixel*height,
+               0, 0, 0 );
 
-    //     Piirret‰‰n fraktaali puskuriin...
-
-    //     Siirret‰‰n data p‰‰muistiin...
-
-
-    //Piirret‰‰n yksi osa kuvasta noin kokeeksi:
-    drawMandelbrotArea( p.width, p.height,
-                        0.0f, 0.0f, 1.0f, 100, image_buffer,
-                        p.area_x, p.area_y,
-                        p.area_width, p.area_heigth,
-                        (uint) p.bytes_per_pixel );
-
-    uint32 my_area = p.area_width*p.area_heigth*p.bytes_per_pixel;
-
-    /* Huom! tassa oletetaan etta oma osa kuvasta on koko kuvan
-     * levyinen.
-     */ 
-    mfc_put( image_buffer,
-             p.image + p.area_y*p.width*p.bytes_per_pixel,
-             MIN(my_area, MAX_TRANSFER_SIZE),
-             0, 0, 0 );
-
-    // Odotellaan kaikki siirrot valmiiksi, varmuuden vuoksi.
-    spu_mfcstat(MFC_TAG_UPDATE_ALL);
+      // Odotellaan kaikki siirrot valmiiksi, varmuuden vuoksi.
+      spu_mfcstat(MFC_TAG_UPDATE_ALL);
+    }
     return 0;
 }
