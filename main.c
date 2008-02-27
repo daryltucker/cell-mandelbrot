@@ -24,8 +24,8 @@
 
 #define BYTES_PER_PIXEL 4
 #define BITS_PER_PIXEL (BYTES_PER_PIXEL * 8)
-#define MAX_IMG_WIDTH 3000
-#define MAX_IMG_HEIGHT 3000
+#define MAX_IMG_WIDTH 4000
+#define MAX_IMG_HEIGHT 4000
 #define ZOOM_STEP 2.0f
 #define MOVE_STEP 0.05f
 
