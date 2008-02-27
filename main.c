@@ -4,7 +4,6 @@
  * Tero Jäntti, Matti Lehtinen, Ville-Matti Pasanen 2007.
  */
 
-#include "image.h"
 #include "fractal.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,7 +26,7 @@
 #define BITS_PER_PIXEL (BYTES_PER_PIXEL * 8)
 #define MAX_IMG_WIDTH 3000
 #define MAX_IMG_HEIGHT 3000
-#define ZOOM_STEP 0.1f
+#define ZOOM_STEP 2.0f
 #define MOVE_STEP 0.05f
 
 #define MEGA 1000000
@@ -214,7 +213,7 @@ void usage(const char *program)
 	   "\n"
 	   "Options:\n"
            "-?\tThis help\n"
-	   "-o\tOutput file\n"
+	   "-o\tOutput file (in BMP format)\n"
 	   "-w\tImage width\n"
 	   "-h\tImage height\n"
            "-n\tNumber of threads, excluding the main thread (1 - %d)\n"
@@ -227,7 +226,7 @@ int main(int argc, char *argv[])
 {
     int optchar;
     int img_width = 100, img_height = 100, n_threads = 1;
-    float zoom = 0.1f, re_offset = 0.0f, im_offset = 0.0f;
+    float zoom = 1.0f, re_offset = 0.0f, im_offset = 0.0f;
     int should_draw_window = 0, quit = 0;
     char filename[MAX_FILE_NAME_LENGTH + 1];
     char *image;
@@ -282,9 +281,6 @@ int main(int argc, char *argv[])
 
     image = (char *) memalign(16, img_width*img_height*BYTES_PER_PIXEL);
 
-    //Testing...
-    //memset(image, '\0', img_width*img_height*BYTES_PER_PIXEL);
-
     if (should_draw_window) {
 
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -309,8 +305,20 @@ int main(int argc, char *argv[])
     printf("Kuvan koko on %dx%dx%d = %d\n", img_width, img_height, BYTES_PER_PIXEL,
            img_width*img_height*BYTES_PER_PIXEL);
 
-    if (strlen(filename) > 0)
-        save_image(image, img_width, img_height, filename);
+    if (strlen(filename) > 0) {
+        //save_image(image, img_width, img_height, filename);
+        SDL_Surface *s = SDL_CreateRGBSurface(SDL_SWSURFACE, img_width, img_height,
+                                              BYTES_PER_PIXEL*8, 0, 0, 0, 0);
+        if (! s) {
+            fprintf(stderr, "SDL_CreateRGBSurface() ei onnistunut: %s", SDL_GetError());
+            exit(1);
+        }
+        copy_image(image, img_width, img_height, s);
+        if (SDL_SaveBMP(s, filename) < 0) {
+            fprintf(stderr, "Kuvan talletus ei onnistunut: %s", SDL_GetError());
+        }
+        SDL_FreeSurface(s);
+    }
 
     if (should_draw_window) {
 
@@ -326,15 +334,17 @@ int main(int argc, char *argv[])
                 case SDL_VIDEOEXPOSE:
                     copy_image(image, img_width, img_height, screen);
                     break;
+
                 case SDL_KEYDOWN:
                 case SDL_KEYUP:
-
-                    if (event.key.keysym.sym == SDLK_ESCAPE)
+                    if (event.key.keysym.sym == SDLK_ESCAPE) {
                         quit = 1;
+                        break;
+                    }
                     else if (event.key.keysym.sym == SDLK_PLUS || event.key.keysym.sym == SDLK_KP_PLUS)
-                        zoom += ZOOM_STEP;
-                    else if ((event.key.keysym.sym == SDLK_MINUS || event.key.keysym.sym == SDLK_KP_MINUS) && (zoom - ZOOM_STEP >= 0))
-                        zoom -= ZOOM_STEP;
+                        zoom *= ZOOM_STEP;
+                    else if ((event.key.keysym.sym == SDLK_MINUS || event.key.keysym.sym == SDLK_KP_MINUS) && (zoom >= 0.0001f))
+                        zoom *= 1.0f/ZOOM_STEP;
                     else if (event.key.keysym.sym == SDLK_UP)
                         im_offset += MOVE_STEP;
                     else if (event.key.keysym.sym == SDLK_DOWN)
@@ -349,6 +359,7 @@ int main(int argc, char *argv[])
                     copy_image(image, img_width, img_height, screen);
 
                     break;
+
                 default:
                     break;
 	    }
