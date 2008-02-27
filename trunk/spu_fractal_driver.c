@@ -29,7 +29,7 @@ int main(uint64 spe_id, uint64 fractal_parameter_ea)
     // Make sure that one horizontal slice isn't greater that the MFC limit.
     if (p.area_width*p.bytes_per_pixel > MAX_TRANSFER_SIZE) 
     {
-      printf("SPU %u failed, because horizontal size is too large (%u).", 
+      printf("SPU %u failed, because horizontal size is too large (%u)\n", 
              my_id, p.area_width);
       return -1;
     }
