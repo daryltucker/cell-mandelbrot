@@ -7,25 +7,22 @@ LFLAGS=-lpthread -lspe2 -lSDL
 all: c_fractal asm_fractal test_fractal
 
 
-c_fractal: main.o image.o spu_fractal_drawer_csf.o
+c_fractal: main.o spu_fractal_drawer_csf.o
 	ppu-gcc $(PPU_CC_FLAGS) -o c_fractal \
-		spu_fractal_drawer_csf.o image.o main.o $(LFLAGS)
+		spu_fractal_drawer_csf.o main.o $(LFLAGS)
 
-asm_fractal: main.o image.o spu_asm_fractal_drawer_csf.o
+asm_fractal: main.o spu_asm_fractal_drawer_csf.o
 	ppu-gcc $(PPU_CC_FLAGS) -o asm_fractal \
-		spu_asm_fractal_drawer_csf.o image.o main.o $(LFLAGS)
+		spu_asm_fractal_drawer_csf.o main.o $(LFLAGS)
 
-test_fractal: main.o image.o spu_test_fractal_drawer_csf.o
+test_fractal: main.o spu_test_fractal_drawer_csf.o
 	ppu-gcc $(PPU_CC_FLAGS) -o test_fractal \
-		spu_test_fractal_drawer_csf.o image.o main.o $(LFLAGS)
+		spu_test_fractal_drawer_csf.o main.o $(LFLAGS)
 
 ##### PPU-MODULIT
 
 main.o: main.c
 	ppu-gcc $(PPU_CC_FLAGS) -c main.c
-
-image.o: image.c
-	ppu-gcc $(PPU_CC_FLAGS) -c image.c
 
 spu_fractal_drawer_csf.o: spu_fractal_drawer
 	embedspu -m64 fractal_handle spu_fractal_drawer spu_fractal_drawer_csf.o
