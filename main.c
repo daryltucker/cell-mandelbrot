@@ -27,7 +27,7 @@
 #define MAX_IMG_WIDTH 4000
 #define MAX_IMG_HEIGHT 4000
 #define ZOOM_STEP 2.0f
-#define MOVE_STEP 0.05f
+#define MOVE_STEP 0.5f
 
 #define MEGA 1000000
 
@@ -110,7 +110,7 @@ int draw_fractal(char *image, int width, int height, int requested_threads, floa
 	f->re_offset     = re_offset;
 	f->im_offset     = im_offset;
 	f->zoom          = zoom;
-	f->max_iteration = 100;
+	f->max_iteration = 200;
 	f->area_x        = 0;
 	f->area_y        = 0 + i*slice_height;
 	f->area_width    = width;
@@ -202,6 +202,9 @@ void copy_image(const char *image, int width, int height, SDL_Surface *s)
 
     if (SDL_MUSTLOCK(s))
         SDL_UnlockSurface(s);
+
+    // Finally update the screen.
+    SDL_UpdateRect(s, 0, 0, width, height);
 }
 
 
@@ -336,6 +339,7 @@ int main(int argc, char *argv[])
                     break;
 
                 case SDL_KEYDOWN:
+		    break;
                 case SDL_KEYUP:
                     if (event.key.keysym.sym == SDLK_ESCAPE) {
                         quit = 1;
@@ -346,13 +350,13 @@ int main(int argc, char *argv[])
                     else if ((event.key.keysym.sym == SDLK_MINUS || event.key.keysym.sym == SDLK_KP_MINUS) && (zoom >= 0.0001f))
                         zoom *= 1.0f/ZOOM_STEP;
                     else if (event.key.keysym.sym == SDLK_UP)
-                        im_offset += MOVE_STEP;
+                        im_offset += MOVE_STEP / zoom;
                     else if (event.key.keysym.sym == SDLK_DOWN)
-                        im_offset -= MOVE_STEP;
+                        im_offset -= MOVE_STEP / zoom;
                     else if (event.key.keysym.sym == SDLK_LEFT)
-                        re_offset += MOVE_STEP;
+                        re_offset += MOVE_STEP / zoom;
                     else if (event.key.keysym.sym == SDLK_RIGHT)
-                        re_offset -= MOVE_STEP;
+                        re_offset -= MOVE_STEP / zoom;
                     else
                         break;
                     draw_fractal(image, img_width, img_height, n_threads, zoom, re_offset, im_offset);
