@@ -88,9 +88,6 @@ min_done:
 	fi $tmp2, $tmp, $tmp2
 	fm $scale, $mand_size, $tmp2
 
-	## Kerrotaan mitä on saatu tähän asti aikaiseksi
-	## wrch SPU_WrOutMbox, $35
-
 ##   offsetX = mandSize / -2.0 * (width > height ? (float)width/height : 1.0)
 ##             + reOffset;
 ##   offsetY = mandSize / -2.0 * (width < height ? (float)height/width : 1.0)
@@ -111,9 +108,6 @@ min_done:
 	lr $y_loop_counter, $area_y
 	br y_loop_test
 y_loop:	
-	## Tässä vois jotain tulostella kokeeksi
-	## mutta pitäis panna parametrit talteen ennen aliohjelman kutsua
-
 ##     line = areaBuffer + (width * (j - areaY) * bytesPerPixel);
 	sf $tmp, $area_y, $y_loop_counter # $tmp = $y_loop_counter - $area_y
 	mpy $tmp, $width, $tmp
@@ -142,7 +136,6 @@ x_loop:
 	br fractal_loop_test
 fractal_loop:
 	## xTemp = x*x - y*y + x0;
-	## saiskohan tan menee 2:lla kaskylla?
 	fm $tmp, $y, $y
 	fma $tmp, $x, $x, $tmp
 	fa $x_tmp, $tmp, $x0
@@ -191,7 +184,7 @@ fractal_loop_test:
 	il $color, 0xFF
 	shli $color, $color, 16
 
-	## Tai jotain muuta
+	## iteration-muuttujasta saadaan vari
 	# lr $color, $iteration
 
 	## Tilanne:
@@ -202,7 +195,7 @@ fractal_loop_test:
 	a $tmp_ptr, $line_ptr, $tmp
 
 	## Asetetaan sana-alkio oikeaan kohtaan 16 tavun
-	## lohkoa muistiin viemistÃ¤ varte.
+	## lohkoa muistiin viemistÃ¤varten.
 	lqd $tmp, 0($tmp_ptr)
 	cwd $word_insertion_mask, 0($tmp_ptr)
 	shufb $tmp, $color, $tmp, $word_insertion_mask
