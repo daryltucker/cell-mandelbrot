@@ -17,6 +17,7 @@ int main(uint64 spe_id, uint64 fractal_parameter_ea)
 {
     fractal_parameters p;
     uint32 message;
+    float mand_size, offset_x, offset_y, scale;
 
     my_id = (unsigned int) spe_id;
 
@@ -33,8 +34,15 @@ int main(uint64 spe_id, uint64 fractal_parameter_ea)
     {
         fprintf(stderr, "SPU %u failed, because horizontal size is too large (%u)\n", 
                 my_id, p.area_width);
-      return -1;
+        return -1;
     }
+
+    mand_size = MANDELBROT_DEFAULT_SIZE / p.zoom;
+    scale = mand_size / MIN(p.width, p.height);
+    offset_x = mand_size / -2.0f * (p.width > p.height ? (float)p.width/p.height : 1.0f)
+        + p.re_offset;
+    offset_y = mand_size / -2.0f * (p.width < p.height ? (float)p.height/p.width : 1.0f)
+        + p.im_offset;
 
     // Calculate how many rows it's possible to fit into one buffer.
     uint32 rows_per_buf = MAX_TRANSFER_SIZE / (p.area_width*p.bytes_per_pixel);
@@ -100,7 +108,7 @@ int main(uint64 spe_id, uint64 fractal_parameter_ea)
 
 #ifndef DRAW_DEBUG_AREAS
         drawMandelbrotArea( p.width, p.height,
-                            p.re_offset, p.im_offset, p.zoom, 
+                            offset_x, offset_y, scale,
                             p.max_iteration, image_buffer[current_buf],
                             p.area_x, p.area_y + buf_y,
                             p.area_width, buf_height,

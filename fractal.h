@@ -27,8 +27,8 @@ typedef struct {
 
 
 void drawMandelbrotArea( uint32 width, uint32 height,
-                         float reOffset, float imOffset,
-                         float zoom, uint32 maxIteration,
+                         float offsetX, float offsetY,
+                         float scale, uint32 maxIteration,
                          char *areaBuffer,
                          uint32 areaX, uint32 areaY,
                          uint32 areaWidth, uint32 areaHeight,
