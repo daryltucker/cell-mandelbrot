@@ -1,6 +1,10 @@
 /*
  * Mandelbrot-fraktaalin PPE-p‰‰ohjelma.
  *
+ * K‰ynnist‰‰ SPU-s‰ikeet, jotka piirt‰v‰t Mandelbrotin
+ * fraktaalin. Tarvittaessa piirt‰‰ fraktaalin ikkunaan tai
+ * tiedostoon.
+ *
  * Tero J‰ntti, Matti Lehtinen, Ville-Matti Pasanen 2007.
  */
 
@@ -138,19 +142,6 @@ int draw_fractal(char *image, int width, int height, int requested_threads, floa
 
     gettimeofday(&time_drawing_started, NULL);
 
-    // SPE:t laskee kovasti...
-
-    // Otetaan debuggaus-viestej‰ vastaan
-/*     void *ps = get_ps(); */
-/*     unsigned int mb_status; */
-/*     unsigned int new; */
-/*     unsigned int mb_value; */
-/*     do { */
-/*         mb_status = *((volatile unsigned int *) (ps + SPU_Mbox_Stat)); */
-/*         new = mb_status & 0x000000FF; */
-/*     } while (new == 0); */
-/*     mb_value = *((volatile unsigned int *) (ps + SPU_Out_Mbox)); */
-
     for (i=0; i<work_threads; i++)
     {
 	if (pthread_join(threads[i], NULL))
@@ -202,9 +193,6 @@ void copy_image(const char *image, int width, int height, SDL_Surface *s)
 
     if (SDL_MUSTLOCK(s))
         SDL_UnlockSurface(s);
-
-    // Finally update the screen.
-    SDL_UpdateRect(s, 0, 0, width, height);
 }
 
 
@@ -326,6 +314,7 @@ int main(int argc, char *argv[])
     if (should_draw_window) {
 
         copy_image(image, img_width, img_height, screen);
+        SDL_UpdateRect(screen, 0, 0, img_width, img_height);
 
 	while (!quit && SDL_WaitEvent(&event))
 	{
@@ -357,11 +346,15 @@ int main(int argc, char *argv[])
                         re_offset += MOVE_STEP / zoom;
                     else if (event.key.keysym.sym == SDLK_RIGHT)
                         re_offset -= MOVE_STEP / zoom;
-                    else
+                    else if (event.key.keysym.sym == SDLK_KP_MULTIPLY) {
+                        zoom = 1.0f;
+                        re_offset = im_offset = 0.0f;
+                    } else
                         break;
+
                     draw_fractal(image, img_width, img_height, n_threads, zoom, re_offset, im_offset);
                     copy_image(image, img_width, img_height, screen);
-
+                    SDL_UpdateRect(screen, 0, 0, img_width, img_height);
                     break;
 
                 default:
