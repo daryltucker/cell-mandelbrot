@@ -325,27 +325,29 @@ int main(int argc, char *argv[])
                     break;
                 case SDL_VIDEOEXPOSE:
                     copy_image(image, img_width, img_height, screen);
+                    SDL_UpdateRect(screen, 0, 0, img_width, img_height);
                     break;
 
-                case SDL_KEYDOWN:
-		    break;
                 case SDL_KEYUP:
                     if (event.key.keysym.sym == SDLK_ESCAPE) {
                         quit = 1;
                         break;
                     }
-                    else if (event.key.keysym.sym == SDLK_PLUS || event.key.keysym.sym == SDLK_KP_PLUS)
+                    else if (event.key.keysym.sym == SDLK_PLUS ||
+                             event.key.keysym.sym == SDLK_KP_PLUS)
                         zoom *= ZOOM_STEP;
-                    else if ((event.key.keysym.sym == SDLK_MINUS || event.key.keysym.sym == SDLK_KP_MINUS) && (zoom >= 0.0001f))
+                    else if ((event.key.keysym.sym == SDLK_MINUS ||
+                              event.key.keysym.sym == SDLK_KP_MINUS) &&
+                             (zoom >= 0.0001f))
                         zoom *= 1.0f/ZOOM_STEP;
                     else if (event.key.keysym.sym == SDLK_UP)
-                        im_offset += MOVE_STEP / zoom;
-                    else if (event.key.keysym.sym == SDLK_DOWN)
                         im_offset -= MOVE_STEP / zoom;
+                    else if (event.key.keysym.sym == SDLK_DOWN)
+                        im_offset += MOVE_STEP / zoom;
                     else if (event.key.keysym.sym == SDLK_LEFT)
-                        re_offset += MOVE_STEP / zoom;
-                    else if (event.key.keysym.sym == SDLK_RIGHT)
                         re_offset -= MOVE_STEP / zoom;
+                    else if (event.key.keysym.sym == SDLK_RIGHT)
+                        re_offset += MOVE_STEP / zoom;
                     else if (event.key.keysym.sym == SDLK_KP_MULTIPLY) {
                         zoom = 1.0f;
                         re_offset = im_offset = 0.0f;
