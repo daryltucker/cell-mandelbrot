@@ -1,4 +1,7 @@
 ### Mandelbrotin fraktaalin piirtävä funktio.
+###
+### Fraktaalin piirto ei toimi, piirtaa vain
+### alueen punaiseksi.
 
 .data
 	
