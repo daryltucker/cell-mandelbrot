@@ -99,10 +99,7 @@ int draw_fractal(char *image, int width, int height, int requested_threads, floa
     assert(last_slice_height - slice_height <= work_threads);
 
     /* Tulee Bus error kun width = height = 150 ja saikeita on 6!!!
-     * Varmaan yritetaan kirjoittaa samalle muistialueelle!!!
-     * Meneekohan vikan saikeen area oikein??!!??
-     *
-     * Alueet nayttas kylla menevan ihan ok.
+     * Varmaan yritetaan kirjoittaa samalle muistialueelle.
      */ 
     for (i=0; i<work_threads; i++)
     {
@@ -216,7 +213,7 @@ void usage(const char *program)
 int main(int argc, char *argv[])
 {
     int optchar;
-    int img_width = 100, img_height = 100, n_threads = 1;
+    int img_width = 400, img_height = 400, n_threads = 1;
     float zoom = 1.0f, re_offset = 0.0f, im_offset = 0.0f;
     int should_draw_window = 0, quit = 0;
     char filename[MAX_FILE_NAME_LENGTH + 1];

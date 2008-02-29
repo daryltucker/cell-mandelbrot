@@ -1,4 +1,5 @@
 
+// testausta varten
 extern unsigned int my_id;
 
 
