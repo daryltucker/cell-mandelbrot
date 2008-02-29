@@ -7,7 +7,7 @@
 #define MAX_TRANSFER_SIZE 16384
 #define TRANSFER_BUFFER_COUNT 4
 //#define DRAW_DEBUG_AREAS
-#define PRINT_DEBUG_INFO
+//#define PRINT_DEBUG_INFO
 
 unsigned int my_id;
 char image_buffer[TRANSFER_BUFFER_COUNT][MAX_TRANSFER_SIZE];
@@ -31,8 +31,8 @@ int main(uint64 spe_id, uint64 fractal_parameter_ea)
     // Make sure that one horizontal slice isn't greater that the MFC limit.
     if (p.area_width*p.bytes_per_pixel > MAX_TRANSFER_SIZE) 
     {
-      printf("SPU %u failed, because horizontal size is too large (%u)\n", 
-             my_id, p.area_width);
+        fprintf(stderr, "SPU %u failed, because horizontal size is too large (%u)\n", 
+                my_id, p.area_width);
       return -1;
     }
 
@@ -48,12 +48,14 @@ int main(uint64 spe_id, uint64 fractal_parameter_ea)
         rows_per_buf = rows_per_slice;
     }
 
+#ifdef PRINT_DEBUG_INFO
     printf("SPU %u whole area (x:%u,y:%u,w:%u,h:%u, "
            "horizontal slices:%u, MFC write events:%u\n", 
            my_id, p.area_x, p.area_y, 
            p.area_width, p.area_heigth,
            p.area_heigth / rows_per_slice + MIN(p.area_heigth%rows_per_slice,1),
            p.area_heigth / rows_per_buf + MIN(p.area_heigth%rows_per_buf,1));
+#endif //PRINT_DEBUG_INFO
 
     uint32 y;
     uint32 buffer_mask = 0;
