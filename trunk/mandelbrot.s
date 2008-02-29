@@ -19,9 +19,9 @@ zero:
 ### Argumentit
 .equ width, 3
 .equ height, 4
-.equ re_offset, 5
-.equ im_offset, 6
-.equ zoom, 7
+.equ offset_x, 5
+.equ offset_y, 6
+.equ scale, 7
 .equ max_iteration, 8
 .equ area_buffer, 9
 #.equ area_x, 10		# Ei käytetä, arvo 0
@@ -67,39 +67,9 @@ drawMandelbrotArea:
 	stqd $sp, FRAME_SIZE($sp)
 	ai $sp, $sp, -FRAME_SIZE
 
-##   mandSize = MANDELBROT_DEFAULT_SIZE / zoom;
-	frest $tmp, $zoom		# $tmp = 1.0f / $zoom;
-	fi $tmp, $zoom, $tmp		# tarkennetaan käänteislukua
-	lqr $tmp2, mandelbrot_default_size
-	fm $mand_size, $tmp2, $tmp
-
-##   scale = mandSize / MIN(width, height);
-	cgt $tmp_cond1, $width, $height
-	## Tähän varmaan on elegantimpikin ratkaisu...
-	brz $tmp_cond1, width_min
-height_min:	
-	lr $tmp, $height
-	br min_done
-width_min:
-	lr $tmp, $width
-min_done:
-	## 1/min $tmp2:iin
-	frest $tmp2, $tmp
-	fi $tmp2, $tmp, $tmp2
-	fm $scale, $mand_size, $tmp2
-
-##   offsetX = mandSize / -2.0 * (width > height ? (float)width/height : 1.0)
-##             + reOffset;
-##   offsetY = mandSize / -2.0 * (width < height ? (float)height/width : 1.0)
-##             + imOffset;
-
 ### Joitain alustuksia
 	orbi $max_color, $max_color, 0xFF
 	cuflt $max_color, $max_color, 0
-
-	## Olkoon nyt offsetX ja offsetY 0.0
-	lqr $offset_x, zero
-	lqr $offset_y, zero
 
 	## Tätä tarvitaan kohdassa y_loop_test
 	a $y_begin, $area_height, $area_y
