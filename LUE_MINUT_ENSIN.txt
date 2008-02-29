@@ -1,0 +1,41 @@
+
+  c_fractal -- Mandelbrotin fraktaalin piirtava ohjelma
+ =======================================================
+
+Kurssin TIEA342 - Modernien moniydinprosessoreiden ohjelmointi
+harjoitustyo.
+
+	Tero Jantti
+	Matti Lehtinen
+	Ville-Matti Pasanen
+
+	29.2.2008
+
+
+Kaantaminen:
+************
+
+	make
+
+Kolme versiota:
+***************
+
+ * c_fractal		C:lla ohjelmoitu fraktaali
+ * asm_fractal		assemblylla ohjelmoitu, ei toimi
+			(varittaa ruudun yhdella varilla)
+ * test_fractal		Ei yhtaan mielenkiintoinen
+
+Kaytto:
+*******
+
+./c_fractal -? nayttaa komentoriviparametrit.
+
+Ikkunan saa nakyviin parametrilla -X.
+
+ikkunan kanssa on seuraavat nappaimet kaytossa:
+
+	*		zoom 100 %
+	+  		zoom in
+	-  		zoom out
+	nuolinappaimet	kuvan siirto
+	ESC		sulkee ohjelman
